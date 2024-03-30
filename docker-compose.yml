@@ -29,13 +29,13 @@ services:
       - '8888:8086'
     volumes:
       - ./database:/var/lib/influxdb2
-        #    environment:
-        #      - DOCKER_INFLUXDB_INIT_MODE=setup
-        #      - DOCKER_INFLUXDB_INIT_USERNAME=myuser
-        #      - DOCKER_INFLUXDB_INIT_PASSWORD=mypassword
-        #      - DOCKER_INFLUXDB_INIT_ORG=myorg
-        #      - DOCKER_INFLUXDB_INIT_BUCKET=mybucket
-        #      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=myadmintoken
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=asszonyij
+      - DOCKER_INFLUXDB_INIT_PASSWORD=1234567890
+      - DOCKER_INFLUXDB_INIT_ORG=VUT
+      - DOCKER_INFLUXDB_INIT_BUCKET=school_data
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ZqdB328qWerxyD32I6XcWPChj0xixkxcyUQ2-k4TunHzcn7FmSGwCZ93kaHTw1DGVFAC0mH9RU7F_5aCy11yJQ==
 
   mysql:
     image: mysql:8.0
@@ -49,3 +49,17 @@ services:
       MYSQL_PASSWORD: 1234567890
     volumes:
       - ./users_db:/var/lib/mysql        
+
+  telegraf:
+    image: telegraf:latest
+    user: 1000:1000
+    container_name: docker-telegraf
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./telegraf:/etc/telegraf:ro
+    environment:
+      INFLUX_TOKEN: ZqdB328qWerxyD32I6XcWPChj0xixkxcyUQ2-k4TunHzcn7FmSGwCZ93kaHTw1DGVFAC0mH9RU7F_5aCy11yJQ==
+      INFLUX_ORG: VUT
+      INFLUX_BUCKET: school_data
+    depends_on:
+      - influxdb
