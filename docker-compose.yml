@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./docker-next
+      dockerfile: Dockerfile
+    container_name: docker-next
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./docker-next:/app
+      - /app/node_modules
+
+  fastapi:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: docker-fastapi
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./backend:/fastapi
+          
+  influxdb:
+    image: influxdb:2.7.5
+    container_name: docker-influxdb
+    ports:
+      - '8888:8086'
+    volumes:
+      - ./database:/var/lib/influxdb2
+        #    environment:
+        #      - DOCKER_INFLUXDB_INIT_MODE=setup
+        #      - DOCKER_INFLUXDB_INIT_USERNAME=myuser
+        #      - DOCKER_INFLUXDB_INIT_PASSWORD=mypassword
+        #      - DOCKER_INFLUXDB_INIT_ORG=myorg
+        #      - DOCKER_INFLUXDB_INIT_BUCKET=mybucket
+        #      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=myadmintoken
+
+  mysql:
+    image: mysql:8.0
+    container_name: docker-mysql
+    ports:
+      - '3333:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234567890
+      MYSQL_DATABASE: auth_users
+      MYSQL_USER: asszonyij
+      MYSQL_PASSWORD: 1234567890
+    volumes:
+      - ./users_db:/var/lib/mysql        
