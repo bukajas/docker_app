@@ -47,7 +47,7 @@ from sqlalchemy.orm import sessionmaker
 INFLUXDB_URL = "http://docker-influxdb:8086"
 INFLUXDB_ORG = "VUT"
 INFLUXDB_BUCKET = "school_data"
-INFLUXDB_TOKEN = "nQzsLuc5gMAEhByGrShv2NryOfaPExtEBxk0xQt7jlMrWzMa-ebBN43uDEYlIayHz5kOJZR75D_ycBlbXK_Lsg=="
+INFLUXDB_TOKEN = "uSw9UaNW-cbxDFGV5mtHrXNR0wzp7pBo5J0jgRopYAkS183A7QEwGy91ME03SAgqEv2C-25RhhiT7qQsrP3ZSA=="
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -63,7 +63,7 @@ write_api = client.write_api(write_options=SYNCHRONOUS)
 
 
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@mysql/auth_users"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@docker-mysql/auth_users"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
@@ -246,19 +246,20 @@ class ReadData(BaseModel):
 
 # TODO read data but manage so that there isnt same data fetched twice, so to save bandwidth
 @app.post("/read_data", tags=["Read"])
-async def read_data(readData: ReadData, current_user: dict = Depends(get_current_user)):  
+async def read_data(readData: ReadData):  
     try:
         # Assuming INFLUXDB_BUCKET and client are defined elsewhere
         query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{readData.range}m) |> filter(fn: (r) => r["_measurement"] == "{readData.dataType}") |> filter(fn: (r) => r["_field"] == "{readData.data}")'
         # Adding filters for slaveId, masterId, and modbusType
         query += f' |> filter(fn: (r) => r["slaveID"] == "{readData.slaveId}") |> filter(fn: (r) => r["masterID"] == "{readData.masterId}") |> filter(fn: (r) => r["modbusType"] == "{readData.modbusType}")'
+        
         tables = client.query_api().query(query)
         # Extract data values from the query result
         data = []
         for table in tables:
             for record in table.records:
                 data.append({"time": record.get_time().isoformat(), "value": record.get_value(), "field": record.get_field()})
-        # print(len(data))
+                
         return {"data": data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

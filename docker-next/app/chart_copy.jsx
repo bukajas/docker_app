@@ -54,7 +54,7 @@ const LineChartPage = () => {
   const fetchDataTypes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://127.0.0.1:8000/filtered_measurements_with_fields?slaveID=${slaveId}&masterID=${masterId}&modbusType=${modbusType}`, {
+      const response = await fetch(`http://localhost:8000/filtered_measurements_with_fields?slaveID=${slaveId}&masterID=${masterId}&modbusType=${modbusType}`, {
         method: 'GET', // Assuming your endpoint is a GET request
         headers: {
           Authorization: `Bearer ${token}`,
@@ -79,11 +79,7 @@ const LineChartPage = () => {
     const requestBodyForEachDataType = selectedDataTypes.map((dataType) => {
       let data = ''; // Initialize subDataType
       // Assign subDataType based on the dataType
-      if (dataType === 'coil_list') {
-        data = 'coils';
-      } else if (dataType === 'temperature_list') {
-        data = 'temperature';
-      }
+      data = "data"
   
       return {
         range: hoursAgo * 60, // Convert hours to minutes

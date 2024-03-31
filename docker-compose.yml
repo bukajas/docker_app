@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  app:
+  docker-app:
     build:
       context: ./docker-next
       dockerfile: Dockerfile
@@ -12,7 +12,7 @@ services:
       - ./docker-next:/app
       - /app/node_modules
 
-  fastapi:
+  docker-fastapi:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -22,7 +22,7 @@ services:
     volumes:
       - ./backend:/fastapi
           
-  influxdb:
+  docker-influxdb:
     image: influxdb:2.7.5
     container_name: docker-influxdb
     ports:
@@ -30,14 +30,13 @@ services:
     volumes:
       - ./database:/var/lib/influxdb2
     environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=asszonyij
       - DOCKER_INFLUXDB_INIT_PASSWORD=1234567890
       - DOCKER_INFLUXDB_INIT_ORG=VUT
       - DOCKER_INFLUXDB_INIT_BUCKET=school_data
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ZqdB328qWerxyD32I6XcWPChj0xixkxcyUQ2-k4TunHzcn7FmSGwCZ93kaHTw1DGVFAC0mH9RU7F_5aCy11yJQ==
 
-  mysql:
+  docker-mysql:
     image: mysql:8.0
     container_name: docker-mysql
     ports:
@@ -50,7 +49,7 @@ services:
     volumes:
       - ./users_db:/var/lib/mysql        
 
-  telegraf:
+  docker-telegraf:
     image: telegraf:latest
     user: 1000:1000
     container_name: docker-telegraf
@@ -64,4 +63,4 @@ services:
       INFLUX_ORG: VUT
       INFLUX_BUCKET: school_data
     depends_on:
-      - influxdb
+      - docker-influxdb
