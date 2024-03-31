@@ -54,6 +54,8 @@ services:
     image: telegraf:latest
     user: 1000:1000
     container_name: docker-telegraf
+    ports:
+      - 8186:8186
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - ./telegraf:/etc/telegraf:ro

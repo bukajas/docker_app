@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from 'react';
-import ApiFetchPage from "./te";
-import LineChartPage from "./chart_copy";
-import DeleteDataForm from "./delete";
-import DataEditor from "./edit"; // Import the Edit page component
-import Login from "./login";
-import DataExportForm from "./export_csv"
+import ApiFetchPage from "../../app/te";
+import LineChartPage from "../../app/chart_copy";
+import DeleteDataForm from "../../app/delete";
+import DataEditor from "../../app/edit"; // Import the Edit page component
+import Login from "../../app/login";
+import DataExportForm from "../../app/export_csv"
 
 export default function Home() {
   const [showDefault, setShowDefault] = useState(true);
