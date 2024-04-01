@@ -20,6 +20,7 @@ const DeleteDataForm = () => {
  
     // Construct the API endpoint URL
     const apiUrl = 'http://127.0.0.1:8000/delete_data'; // Replace this with the full URL if needed
+    const token = localStorage.getItem('token');
 
     try {
       console.log(measurement,hours)
@@ -27,6 +28,7 @@ const DeleteDataForm = () => {
       const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ measurement, hours }), // Send both measurement and hours

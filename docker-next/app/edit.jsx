@@ -27,6 +27,7 @@ const DataEditor = () => {
     }
 
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.get('http://127.0.0.1:8000/modify_data_read', {
         params: {
           range_in_minutes: rangeInMinutes,
@@ -35,7 +36,11 @@ const DataEditor = () => {
           slave_id: slaveID,
           master_id: masterID,
           modbus_type: modbusType
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       });
       setData(response.data);
       console.log(response.data)
@@ -58,7 +63,7 @@ const DataEditor = () => {
 
     try {
       console.log(itemToDelete.time, new Date(new Date(itemToDelete.time).getTime() + 60000).toISOString(), measurementName, fieldName, slaveID, masterID, modbusType);
-  
+      const token = localStorage.getItem('token');
       const response = await axios.delete('http://127.0.0.1:8000/modify_data_delete', {
         data: {
           start_time: new Date(itemToDelete.time).toISOString(), // Ensure this matches ISO format
@@ -70,6 +75,7 @@ const DataEditor = () => {
           modbus_type: parseInt(modbusType),
         },
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -98,16 +104,27 @@ const DataEditor = () => {
   
     try {
       // Adjust this URL and parameters according to your API's requirements
+      const token = localStorage.getItem('token');
+      console.log(itemToUpdate.time)
+      console.log(new Date(new Date(itemToUpdate.time).getTime() + 10).toISOString())
       const response = await axios.post('http://127.0.0.1:8000/modify_data_update', {
+
         start_time: itemToUpdate.time, // Use the item's timestamp as start time for simplicity
-        end_time: new Date(new Date(itemToUpdate.time).getTime() + 1).toISOString(), // Assuming updates within a 1 minute range; adjust as needed
+        end_time: new Date(new Date(itemToUpdate.time).getTime() + 10).toISOString(), // Assuming updates within a 1 minute range; adjust as needed
         measurement_name: measurementName,
         field_name: fieldName,
         slave_id: slaveID,
         master_id: masterID,
         modbus_type: modbusType,
         value: editValue, // New value to update
-      });
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      },
+
+      
+      );
+
   
       console.log('Update response:', response.data);
       setEditIndex(null); // Reset edit index
@@ -161,7 +178,6 @@ const DataEditor = () => {
             ) : (
               <>
                 {item.time + ">>>>>" + item.field + ":> " + item.value + " "}
-                {console.log(index)}
                 <button onClick={() => handleEdit(index)}> Edit</button>
                 <button onClick={() => handleDelete(index)}> Delete</button>
               </>

@@ -32,7 +32,8 @@ const DataExportForm = () => {
         computedToTime = now.toISOString().slice(0, 16);
       }
       console.log(computedFromTime, computedToTime)
-      const response = await axios.get('http://127.0.0.1:8000/export_csv', {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:8000/export_csv', {
         params: { 
           measurement, 
           field, 
@@ -43,6 +44,9 @@ const DataExportForm = () => {
           toTime: computedToTime 
         },
         responseType: 'blob',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       FileDownload(response.data, 'export.csv');

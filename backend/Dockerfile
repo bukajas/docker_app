@@ -1,5 +1,5 @@
 # Use the official Python image based on Alpine Linux
-FROM python:3.9-alpine
+FROM python:3.10
 
 # Set the working directory inside the container
 WORKDIR /fastapi

@@ -23,6 +23,7 @@ const DataEditor = () => {
     const endDateTime = combineDateTime(endDate, endTime);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.get('http://127.0.0.1:8000/modify_data_read', {
         params: {
           start_time: startDateTime,
@@ -30,7 +31,11 @@ const DataEditor = () => {
           slave_id: slaveID,
           master_id: masterID,
           modbus_type: modbusType,
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+
       });
       setData(response.data);
     } catch (error) {

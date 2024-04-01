@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query, Depends, Header, status, Response, Request
+from fastapi import FastAPI, HTTPException, Query, Depends, Header, status, Response, Request, Security
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from datetime import datetime, timedelta
@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import pytz
 import random
-from typing import Optional, List
+from typing import Optional, List, Annotated
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBasic, HTTPBasicCredentials
 import secrets 
@@ -30,6 +30,9 @@ from sqlalchemy.orm import sessionmaker
 
 
 
+
+
+
 # 1. user can access data only after signing in - partialy done
 # 2. one graph will have its own inputs, so that user can have multiple gprahs, and can choose what is want to see, - DONE
 # 3. export data from the graph, and overall
@@ -39,8 +42,6 @@ from sqlalchemy.orm import sessionmaker
 # TODO security - encrypted data transfer, and if in database is data stored plaintext or also encrypted
 # TODO add users for administration + add administration
 # TODO manage to stop and resume logging, > how if modbus inicates the comunication
-
-
 
 
 # Replace with your InfluxDB details
@@ -61,29 +62,111 @@ client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
 
+# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@docker-mysql/auth_users"
 
-
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@docker-mysql/auth_users"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
-)
+# engine = create_engine(
+#     SQLALCHEMY_DATABASE_URL
+# )
  
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Base = declarative_base()
+# models.Base.metadata.create_all(bind=engine)
 
-Base = declarative_base()
 
-models.Base.metadata.create_all(bind=engine)
+# SECRET_KEY = "a very secret key"
+# ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# oauth2_scheme = OAuth2PasswordBearer(
+#     tokenUrl="token",
+#     scopes={"me": "Read information about the current user.", "items": "Read items.",
+#             "basic": "basic no permisions", "admin": "all permisions", "employee": "almost all"},
+# )
+
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+
+
+# def require_role(*required_roles):
+#     def role_checker(current_user: models.User = Depends(auth.get_current_user)):
+#         if current_user.role not in required_roles:
+#             raise HTTPException(
+#                 status_code=status.HTTP_403_FORBIDDEN,
+#                 detail="Operation not permitted"
+#             )
+#         return current_user
+#     return role_checker
+
+
+# def fake_hash_password(password: str):
+#     return "fakehashed" + password
+
+# def get_user(db: Session, username: str):
+#     return db.query(models.User).filter(models.User.username == username).first()
+
+# def authenticate_user(db: Session, username: str, password: str):
+#     user = get_user(db, username)
+#     if not user or not auth.verify_password(password, user.hashed_password):
+#         return False
+#     return user
+
+# def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+#     to_encode = data.copy()
+#     if expires_delta:
+#         expire = datetime.utcnow() + expires_delta
+#     else:
+#         expire = datetime.utcnow() + timedelta(minutes=15)
+#     to_encode.update({"exp": expire})
+#     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+#     return encoded_jwt
+
+
+#! scopes - right now its just for one role, make it also in mysql database so taht user can have mutliple roles
+@app.post("/token", tags=["authentication"])
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(auth.get_db),) -> schemas.Token:
+    user = auth.authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": user.username, "scopes": [user.role]}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+# async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail="Could not validate credentials",
+#         headers={"WWW-Authenticate": "Bearer"},
+#     )
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#         username: str = payload.get("sub")
+#         if username is None:
+#             raise credentials_exception
+#         user = db.query(models.User).filter(models.User.username == username).first()
+#         if user is None:
+#             raise credentials_exception
+#     except JWTError:
+#         raise credentials_exception
+#     return user
+
+
+
 
 @app.post("/register", response_model=schemas.UserInDB)
-def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def register_user(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     # Check if the username already exists
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
@@ -102,7 +185,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 @app.post("/login")
-def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def login(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if not db_user or not auth.verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
@@ -111,109 +194,19 @@ def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 
-
-
-
-SECRET_KEY = "a very secret key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
-
-
-
-
-
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-# Dummy database of users
-fake_users_db = {
-    "test": {
-        "username": "test",
-        "full_name": "Test User",
-        "email": "test@example.com",
-        "hashed_password": "fakehashedtest",
-        "disabled": False,
-    }
-}
-
-def require_role(*required_roles):
-    def role_checker(current_user: models.User = Depends(get_current_user)):
-        if current_user.role not in required_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Operation not permitted"
-            )
-        return current_user
-    return role_checker
-
-
-def fake_hash_password(password: str):
-    return "fakehashed" + password
-
-def get_user(db: Session, username: str):
-    return db.query(models.User).filter(models.User.username == username).first()
-
-def authenticate_user(db: Session, username: str, password: str):
-    user = get_user(db, username)
-    if not user or not auth.verify_password(password, user.hashed_password):
-        return False
-    return user
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-@app.post("/token", tags=["authentication"])
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
-
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        user = db.query(models.User).filter(models.User.username == username).first()
-        if user is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    return user
-
 @app.get("/secure-endpoint", tags=["authentication"])
-async def secure_endpoint(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+async def secure_endpoint(current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     # Here you can use current_user directly as it is already authenticated
     return {"message": "Secure Information", "user": current_user}
+
+
 
 @app.patch("/users/{user_id}/role", response_model=schemas.UserInDB)
 def update_user_role(
     user_id: int, 
     new_role: str, 
-    current_user: models.User = Depends(require_role('admin', 'employee')), 
-    db: Session = Depends(get_db)
+    current_user: Annotated[models.User, Security(auth.get_current_active_user, scopes=["admin"])], 
+    db: Session = Depends(auth.get_db)
 ):
     # Fetch the user to update from the DB
     user_to_update = db.query(models.User).filter(models.User.id == user_id).first()
@@ -245,8 +238,10 @@ class ReadData(BaseModel):
 
 
 # TODO read data but manage so that there isnt same data fetched twice, so to save bandwidth
+# TODO the data needs to have field or tag that specifies which protocos it is.
+    
 @app.post("/read_data", tags=["Read"])
-async def read_data(readData: ReadData):  
+async def read_data(readData: ReadData, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):  
     try:
         # Assuming INFLUXDB_BUCKET and client are defined elsewhere
         query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{readData.range}m) |> filter(fn: (r) => r["_measurement"] == "{readData.dataType}") |> filter(fn: (r) => r["_field"] == "{readData.data}")'
@@ -267,7 +262,7 @@ async def read_data(readData: ReadData):
 # TODO add normalization
 # TODO add agregation (depends if on begining or when its read)
 @app.post("/write_data", tags=["Write"])
-async def write_data(value: int = Query(..., description="The data value to write"), current_user: dict = Depends(get_current_user)):
+async def write_data(value: int = Query(..., description="The data value to write"), scopes=["admin"], current_user: dict = Depends(auth.get_current_user)):
     try:
         # Create an InfluxDB point with a "data" field
         point = Point("data").field("values", value).tag("lol", "testik")
@@ -297,7 +292,7 @@ class ModbusData(BaseModel):
 # ? Do it not only for Modbus but for all types of protocols
     
 @app.post("/modbus/", tags=["Write"])
-async def receive_modbus_data(modbus_data: ModbusData, current_user: dict = Depends(get_current_user)):
+async def receive_modbus_data(modbus_data: ModbusData, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     # Process the received Modbus data
     coil = Point("coil_list")\
         .field("coils", modbus_data.coils[0])\
@@ -326,7 +321,7 @@ class DeleteDataRequest(BaseModel):
     hours: int
 
 @app.delete("/delete_data", tags=["Delete"])
-async def delete_data_from_database(request_body: DeleteDataRequest):
+async def delete_data_from_database(request_body: DeleteDataRequest, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     delete_api = client.delete_api()
     stop = datetime.now(pytz.UTC)
     start = stop - timedelta(minutes=request_body.hours)
@@ -354,12 +349,14 @@ async def delete_data_from_database(request_body: DeleteDataRequest):
 
 @app.get("/modify_data_read", tags=["Modify"])
 async def modify_data_read(
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
     range_in_minutes: int = Query(6, description="Range in minutes"),
     measurement_name: str = Query("coil_list", description="Measurement name"),
     field_name: str = Query("coils", description="Field name"),
     slave_id: int = Query("1", description="Slave ID"),
     master_id: int = Query("2", description="Master ID"),
-    modbus_type: int = Query("1", description="Modbus Type")
+    modbus_type: int = Query("1", description="Modbus Type"),
+
 ):
     try:
         query = f'from(bucket: "{INFLUXDB_BUCKET}") \
@@ -411,8 +408,10 @@ class UpdateDataModel(BaseModel):
     value: float  # or the appropriate type
 
 
+# ! problem - when i update the new data is written to it but it is exactly the same to than it lists it at the end of the list, and it looks like it isnt fetching new data
+    
 @app.post("/modify_data_update", tags=["Modify"])
-async def modify_data_update(update_data: UpdateDataModel):
+async def modify_data_update(update_data: UpdateDataModel,):
     try:
         # print(update_data.slave_id)
         # Convert datetime to a string format suitable for InfluxDB
@@ -442,7 +441,7 @@ async def modify_data_update(update_data: UpdateDataModel):
                     "time": record.get_time(),
                     "measurement": update_data.measurement_name,
                     "field": update_data.field_name,
-                    "value": int(update_data.value),
+                    "value": float(update_data.value),
                     "tags": {
                         "slaveID": str(update_data.slave_id),
                         "masterID": str(update_data.master_id),
@@ -464,7 +463,7 @@ async def modify_data_update(update_data: UpdateDataModel):
                 },
                 "tags": data["tags"],
             }
-            coil = Point(data["measurement"])\
+            data_point = Point(data["measurement"])\
             .field(data["field"], data["value"])\
             .time(data["time"])\
             .tag("slaveID", data["tags"]["slaveID"])\
@@ -473,8 +472,8 @@ async def modify_data_update(update_data: UpdateDataModel):
     
 
 
-            print(coil)
-            write_api.write(bucket=INFLUXDB_BUCKET, record=coil)
+            print(data_point)
+            write_api.write(bucket=INFLUXDB_BUCKET, record=data_point)
 
         return {"message": "Data updated successfully."}
     except Exception as e:
@@ -492,7 +491,7 @@ class DeleteDataModel(BaseModel):
 
 # ! influxdb doesnt support specifying deletion with field values
 @app.delete("/modify_data_delete", tags=["Modify"])
-async def modify_data_delete(delete_data: DeleteDataModel):
+async def modify_data_delete(delete_data: DeleteDataModel, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     try:
         # Convert datetime to string in the format InfluxDB expects
         start_str = delete_data.start_time.isoformat()
@@ -537,9 +536,10 @@ def format_time_for_influxdb(time_str: Optional[str]) -> str:
 
 
 @app.get("/export_csv")
-async def export_csv(measurement: Optional[str] = None, field: Optional[str] = None, slaveID: Optional[str] = None,
-                    masterID: Optional[str] = None, modbusType: Optional[str] = None, fromTime: Optional[str] = None,
-                    toTime: Optional[str] = None, minutesFromNow: Optional[int] = None):    # Ensure you adjust this part with your InfluxDB settings
+async def export_csv(current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
+    measurement: Optional[str] = None, field: Optional[str] = None, slaveID: Optional[str] = None,
+    masterID: Optional[str] = None, modbusType: Optional[str] = None, fromTime: Optional[str] = None,
+    toTime: Optional[str] = None, minutesFromNow: Optional[int] = None):    # Ensure you adjust this part with your InfluxDB settings
     formatted_from_time = format_time_for_influxdb(fromTime)
     formatted_to_time = format_time_for_influxdb(toTime)
     
@@ -600,7 +600,7 @@ async def export_csv(measurement: Optional[str] = None, field: Optional[str] = N
         
 
 @app.post("/available_data_types")
-async def available_data_types(request: Request):
+async def available_data_types(request: Request, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
 
     try:
         body = await request.json()
@@ -634,7 +634,7 @@ async def available_data_types(request: Request):
 
 
 @app.get("/measurements")
-async def get_measurements():
+async def get_measurements(current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     query_api = client.query_api()
     query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: -1h) |> keep(columns: ["_field"]) |> distinct(column: "_field")'
     result = query_api.query(org=INFLUXDB_ORG, query=query)
@@ -642,7 +642,9 @@ async def get_measurements():
     return {"measurements": measurements}
 
 @app.get("/filtered_measurements_with_fields")
-async def get_filtered_measurements_with_fields(slaveID: Optional[str] = Query(None), masterID: Optional[str] = Query(None), modbusType: Optional[str] = Query(None)):
+async def get_filtered_measurements_with_fields(
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
+    slaveID: Optional[str] = Query(None), masterID: Optional[str] = Query(None), modbusType: Optional[str] = Query(None)):
     query_api = client.query_api()
     
     # Construct the filter part of the query based on the provided tags
