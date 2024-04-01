@@ -75,7 +75,7 @@ const LineChartPage = () => {
         const response = await fetch(`http://127.0.0.1:8000/read_data`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,b
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(requestBody),
@@ -170,6 +170,18 @@ const LineChartPage = () => {
   
     return chartData;
   };
+
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#000000', // Example primary color
+      },
+      success: {
+        main: '#dc3545', // Example secondary color
+      },
+    },
+  });
+
   
   // Use this function when rendering your chart component
   const chartData = generateChartData();

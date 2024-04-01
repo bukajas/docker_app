@@ -1,6 +1,6 @@
 // ExportButton.js
 import React from 'react';
-
+import { Button} from '@mui/material';
 const ExportButton = ({ chartRef }) => {
   const exportChart = () => {
     console.log("he")
@@ -16,7 +16,7 @@ const ExportButton = ({ chartRef }) => {
     }
 };
   return (
-    <button onClick={exportChart} style={{ marginTop: '10px' }}>Export Chart</button>
+    <Button onClick={exportChart} style={{ marginTop: '10px' }}>Export Chart</Button>
     
   );
 };

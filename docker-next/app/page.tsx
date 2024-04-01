@@ -1,53 +1,101 @@
 "use client";
+"use client";
+import { AppBar, Toolbar, Button, Drawer, List, ListItem, ListItemText, Container, Typography } from '@mui/material';
 import React, { useState } from 'react';
-import ApiFetchPage from "./te";
-import LineChartPage from "./chart_copy";
-import DeleteDataForm from "./delete";
-import DataEditor from "./edit"; // Import the Edit page component
-import Login from "./login";
-import DataExportForm from "./export_csv"
+import LineChartPage from "./chart_copy"; // Import your chart component
+
+import DeleteDataForm from "./delete"; // Component for deleting data
+import DataEditor from "./edit"; // Component for editing data
+import Login from "./login"; // Login component
+import DataExportForm from "./export_csv"; // Component for exporting data
 
 export default function Home() {
-  const [showDefault, setShowDefault] = useState(true);
-  const [chartInstances, setChartInstances] = useState([]); // State to store instances of LineChartPage
-  const [nextId, setNextId] = useState(0); // State to store the next unique id for a new chart instance
-
-  // Function to add a new instance of LineChartPage
+  const [activeComponent, setActiveComponent] = useState('default');
+  const [chartInstances, setChartInstances] = useState([]);
+  const [nextId, setNextId] = useState(0);
+  
   const addChartInstance = () => {
     const newChart = { id: nextId, component: <LineChartPage key={nextId} /> };
     setChartInstances([...chartInstances, newChart]);
-    setNextId(nextId + 1); // Increment the id for the next chart
+    setNextId(nextId + 1);
   };
 
-  // Function to remove a specified instance of LineChartPage
+
   const deleteChartInstance = (idToRemove) => {
     setChartInstances(chartInstances.filter(chart => chart.id !== idToRemove));
   };
 
-  return (
-    <main>
-      <button onClick={() => setShowDefault(true)}>Show Default Pages</button>
-      <button onClick={() => setShowDefault(false)}>Show Edit Page</button>
-      {showDefault ? (
-        <>
-          {/* <ApiFetchPage /> */}
-          <Login />
-          <div>
-            {chartInstances.map(chart => (
-              <div key={chart.id}>
-                {chart.component}
-                <button onClick={() => deleteChartInstance(chart.id)}>Delete This Chart</button>
-              </div>
-            ))}
-          </div>
-          <button onClick={addChartInstance}>Add Chart</button>
-          <DeleteDataForm />
-          <DataExportForm />
-        </>
+  const showChartView = () => {
+    setActiveComponent('charts');
+  };
+
+  // Function to display the chart instances
+  const renderCharts = () => (
+    <>
+      <Button variant="contained" color="primary" onClick={addChartInstance}>
+        Add New Chart
+      </Button>
+      {chartInstances.length === 0 ? (
+        <Typography>No charts to display. Use the "Add New Chart" button to get started.</Typography>
       ) : (
-        <DataEditor />
+        chartInstances.map(chart => (
+          <div key={chart.id}>
+            {chart.component}
+            <Button variant="contained" color="error" onClick={() => deleteChartInstance(chart.id)}>
+              Delete This Chart
+            </Button>
+          </div>
+        ))
       )}
-    </main>
+    </>
+  );
+  // Drawer items
+  const drawerItems = (
+    <List>
+      <ListItem button onClick={() => setActiveComponent('default')}>
+        <ListItemText primary="Login / Show Default" />
+      </ListItem>
+      <ListItem button onClick={() => setActiveComponent('edit')}>
+        <ListItemText primary="Edit Data" />
+      </ListItem>
+      <ListItem button onClick={() => setActiveComponent('delete')}>
+        <ListItemText primary="Delete Data" />
+      </ListItem>
+      <ListItem button onClick={showChartView}>
+        <ListItemText primary="Show Charts" />
+      </ListItem>
+      <ListItem button onClick={() => setActiveComponent('export')}>
+        <ListItemText primary="Export Data" />
+      </ListItem>
+      {/* Add other list items for additional actions */}
+    </List>
+  );
+
+
+  return (
+    <div>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Graph Dashboard
+          </Typography>
+        <Login />
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        variant="permanent"
+        anchor="left"
+      >
+        {drawerItems}
+      </Drawer>
+      <Container>
+        {/* Conditionally render components based on activeComponent state */}
+        {activeComponent === 'default' && <Typography>Welcome to the Graph Dashboard</Typography>}
+        {activeComponent === 'charts' && renderCharts()}
+        {activeComponent === 'edit' && <DataEditor />}
+        {activeComponent === 'delete' && <DeleteDataForm />}
+        {activeComponent === 'export' && <DataExportForm />}
+      </Container>
+    </div>
   );
 }
-

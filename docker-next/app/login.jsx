@@ -1,6 +1,14 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -8,9 +16,9 @@ function Login() {
   const [message, setMessage] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loggedInUsername, setLoggedInUsername] = useState('');
+  const [open, setOpen] = useState(false); // Initially set to false to keep the dialog closed
 
   useEffect(() => {
-    // Check if the user is logged in when the component mounts
     const token = localStorage.getItem('token');
     const storedUsername = localStorage.getItem('username');
     if (token && storedUsername) {
@@ -28,22 +36,22 @@ function Login() {
         },
       });
       localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('username', username); // Store the username
+      localStorage.setItem('username', username);
       setIsLoggedIn(true);
       setLoggedInUsername(username);
-      alert('Login successful!');
+      setOpen(false); // Close the dialog on successful login
     } catch (error) {
-      alert('Login failed!');
       console.error('Login error:', error);
+      alert('Login failed!');
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('username'); // Remove the username
+    localStorage.removeItem('username');
     setIsLoggedIn(false);
     setLoggedInUsername('');
-    alert('Logout successful!');
+    setOpen(false); // Close the dialog on logout
   };
 
   const fetchSecureMessage = async () => {
@@ -61,25 +69,73 @@ function Login() {
     }
   };
 
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#000000', // Example primary color
+      },
+      secondary: {
+        main: '#dc3545', // Example secondary color
+      },
+    },
+  });
+
   return (
     <div>
-      <h2>Login</h2>
-      {!isLoggedIn ? (
-        <form onSubmit={handleLogin}>
-          <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" required />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-          <button type="submit">Login</button>
-        </form>
-      ) : (
-        <div>
-          <p>Welcome, {loggedInUsername}!</p>
-          <button onClick={handleLogout}>Logout</button>
-        </div>
-      )}
-      <button onClick={fetchSecureMessage}>Fetch Secure Message</button>
-      {message && <p>{message}</p>}
+      <ThemeProvider theme={theme}>
+      <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={() => setOpen(true)} 
+          style={{ minWidth: '200px', minHeight: '50px' }}>
+          {isLoggedIn ? `Logged in as ${loggedInUsername}` : "Login / Check Status"}
+        </Button>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>{isLoggedIn ? "Logged In" : "Login"}</DialogTitle>
+        <DialogContent>
+          {!isLoggedIn ? (
+            <form onSubmit={handleLogin}>
+              <TextField
+                margin="dense"
+                id="username"
+                label="Username"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+              <TextField
+                margin="dense"
+                id="password"
+                label="Password"
+                type="password"
+                fullWidth
+                variant="outlined"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <DialogActions>
+                <Button onClick={() => setOpen(false)}>Cancel</Button>
+                <Button type="submit">Login</Button>
+              </DialogActions>
+            </form>
+          ) : (
+            <div>
+              <p>Welcome, {loggedInUsername}!</p>
+              <Button onClick={handleLogout}>Logout</Button>
+              <Button onClick={fetchSecureMessage}>Fetch Secure Message</Button>
+              {message && <p>{message}</p>}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      </ThemeProvider>
     </div>
   );
 }
 
 export default Login;
+

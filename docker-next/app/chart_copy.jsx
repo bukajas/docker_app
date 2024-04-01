@@ -5,6 +5,7 @@ import { Chart, registerables } from 'chart.js';
 import { ResizableBox } from 'react-resizable';
 import ExportButton from './export_image';
 import 'react-resizable/css/styles.css'; // Import CSS for react-resizable
+import { Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 Chart.register(...registerables);
 
@@ -196,6 +197,32 @@ const LineChartPage = () => {
   // Use this function when rendering your chart component
   const chartData = generateChartData();
 
+  const Input = ({ label, value, onChange }) => (
+    <TextField
+      label={label}
+      variant="outlined"
+      type="number"
+      fullWidth
+      value={value}
+      onChange={onChange}
+      size="small"
+      margin="normal"
+    />
+  );
+
+  const SelectInput = ({ label, value, onChange, options }) => (
+    <FormControl fullWidth margin="normal" size="small">
+      <InputLabel>{label}</InputLabel>
+      <Select label={label} value={value} onChange={onChange}>
+        {options.map((option) => (
+          <MenuItem key={option.value} value={option.value}>
+            {option.label}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+
 
   const options = {
     animation: false,
@@ -213,51 +240,82 @@ const LineChartPage = () => {
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '20px' }}>
-        <label>
-          Last Hours:
-          <input type="number" value={hoursAgo} onChange={(e) => setHoursAgo(Number(e.target.value))} />
-        </label>
-        <label style={{ marginLeft: '10px' }}>
-          Data Points Limit:
-          <input type="number" value={dataPointsLimit} onChange={(e) => setDataPointsLimit(Number(e.target.value))} />
-        </label>
+    <Grid container spacing={2}>
+      <Grid item xs={8}>
         <div>
-          {dataTypes.map((dataType) => (
-            <button key={dataType} onClick={() => toggleDataType(dataType)} style={{ marginLeft: '10px', background: selectedDataTypes.includes(dataType) ? 'lightgreen' : 'lightgrey' }}>
+          <Line ref={chartRef} data={chartData} options={options} />
+        </div>
+      </Grid>
+      <Grid item xs={4}>
+        <Input label="Slave ID" value={slaveId} onChange={(e) => setSlaveId(Number(e.target.value))} />
+        <Input label="Master ID" value={masterId} onChange={(e) => setMasterId(Number(e.target.value))} />
+        <SelectInput
+          label="Modbus Type"
+          value={modbusType}
+          onChange={(e) => setModbusType(Number(e.target.value))}
+          options={[
+            { label: 'Modbus TCP 2', value: 2 },
+            { label: 'Modbus RTU 1', value: 1 },
+          ]}
+        />
+        <Input label="Last Hours" value={hoursAgo} onChange={(e) => setHoursAgo(Number(e.target.value))} />
+        <Input label="Data Points Limit" value={dataPointsLimit} onChange={(e) => setDataPointsLimit(Number(e.target.value))} />
+        <div>
+        {dataTypes.map((dataType) => (
+            <Button key={dataType} onClick={() => toggleDataType(dataType)} style={{ marginLeft: '10px', background: selectedDataTypes.includes(dataType) ? 'lightgreen' : 'lightgrey' }}>
               {dataType}
-            </button>
+            </Button>
           ))}
         </div>
-
-        <button onClick={toggleFetchEnabled} style={{ marginLeft: '10px', background: fetchEnabled ? 'lightgreen' : 'lightgrey' }}>
+        <Button
+          variant="contained"
+          onClick={toggleFetchEnabled}
+          style={{
+            backgroundColor: fetchEnabled ? '#4caf50' : '#3f51b5', // Use your theme's success and primary color
+            color: 'white'
+          }}
+        >
           {fetchEnabled ? 'Disable Fetching' : 'Enable Fetching'}
-        </button>
-      </div>
-      <div>
-        <label>
-          Slave ID:
-          <input type="number" value={slaveId} onChange={(e) => toggleSlaveId(Number(e.target.value))} />
-        </label>
-        <label style={{ marginLeft: '10px' }}>
-          Master ID:
-          <input type="number" value={masterId} onChange={(e) => toggleMasterId(Number(e.target.value))} />
-        </label>
-        <label style={{ marginLeft: '10px' }}>
-          Modbus Type:
-          <select value={modbusType} onChange={(e) => toggleModbusType(Number(e.target.value))}>
-            <option value={2}>Modbus TCP 2</option>
-            <option value={1}>Modbus RTU 1 </option>
-          </select>
-        </label>
-      </div>
-      <ExportButton chartRef={chartRef} /> {/* Pass chartInstance instead of chartRef */}
-      <ResizableBox width={400} height={400} minConstraints={[100, 100]} maxConstraints={[1000, 500]}>
-      <Line ref={chartRef} data={chartData} options={options} />
-      </ResizableBox>
-    </div>
+        </Button>
+        <ExportButton chartRef={chartRef} />
+        {/* Render list of measurements below */}
+        {/* ... */}
+      </Grid>
+    </Grid>
   );
 };
+
+
+
+//       </div>
+//       <div>
+//         <label>
+//           Slave ID:
+//           <input type="number" value={slaveId} onChange={(e) => toggleSlaveId(Number(e.target.value))} />
+//         </label>
+//         <label style={{ marginLeft: '10px' }}>
+//           Master ID:
+//           <input type="number" value={masterId} onChange={(e) => toggleMasterId(Number(e.target.value))} />
+//         </label>
+//         <label style={{ marginLeft: '10px' }}>
+//           Modbus Type:
+//           <select value={modbusType} onChange={(e) => toggleModbusType(Number(e.target.value))}>
+//             <option value={2}>Modbus TCP 2</option>
+//             <option value={1}>Modbus RTU 1 </option>
+//           </select>
+//         </label>
+//       </div>
+//       <ExportButton chartRef={chartRef} /> {/* Pass chartInstance instead of chartRef */}
+//       <ResizableBox width={400} height={400} minConstraints={[100, 100]} maxConstraints={[1000, 500]}>
+//       <Line ref={chartRef} data={chartData} options={options} />
+//       </ResizableBox>
+//     </div>
+//   );
+// };
+
+
+
+
+
 
 export default LineChartPage;
