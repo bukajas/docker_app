@@ -23,11 +23,11 @@ def read_holding_registers():
         log.debug(f"Read holding registers: {rr.registers}")
         
         print(rr.registers[0])
-        data1 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=2 data={}'.format(rr.registers[0])  # Formulate your data here
+        data1 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=2,protocol=modbus data={}'.format(rr.registers[0])  # Formulate your data here
         new_list = []
         for i in range(len(rr.registers)):
             new_list.append(random.randint(0,100))
-        data2 = 'network_speed,slaveID=1,masterID=1,unit=1,modbusType=1 data={}'.format(new_list[0])  # Formulate your data here
+        data2 = 'vibration,VendorID=1a3!de,NetworkType=serial,unit=1,speed=10.3,protocol=ethernet/ip data={}'.format(new_list[0])  # Formulate your data here
         data_list = [data1,data2]
         data = "\n".join(data_list)
         try:

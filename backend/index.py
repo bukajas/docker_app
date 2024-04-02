@@ -62,71 +62,15 @@ client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
 
-# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@docker-mysql/auth_users"
 
-# engine = create_engine(
-#     SQLALCHEMY_DATABASE_URL
-# )
- 
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-# Base = declarative_base()
-# models.Base.metadata.create_all(bind=engine)
-
-
-# SECRET_KEY = "a very secret key"
-# ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-# oauth2_scheme = OAuth2PasswordBearer(
-#     tokenUrl="token",
-#     scopes={"me": "Read information about the current user.", "items": "Read items.",
-#             "basic": "basic no permisions", "admin": "all permisions", "employee": "almost all"},
-# )
 
-# def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-
-
-# def require_role(*required_roles):
-#     def role_checker(current_user: models.User = Depends(auth.get_current_user)):
-#         if current_user.role not in required_roles:
-#             raise HTTPException(
-#                 status_code=status.HTTP_403_FORBIDDEN,
-#                 detail="Operation not permitted"
-#             )
-#         return current_user
-#     return role_checker
-
-
-# def fake_hash_password(password: str):
-#     return "fakehashed" + password
-
-# def get_user(db: Session, username: str):
-#     return db.query(models.User).filter(models.User.username == username).first()
-
-# def authenticate_user(db: Session, username: str, password: str):
-#     user = get_user(db, username)
-#     if not user or not auth.verify_password(password, user.hashed_password):
-#         return False
-#     return user
-
-# def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-#     to_encode = data.copy()
-#     if expires_delta:
-#         expire = datetime.utcnow() + expires_delta
-#     else:
-#         expire = datetime.utcnow() + timedelta(minutes=15)
-#     to_encode.update({"exp": expire})
-#     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-#     return encoded_jwt
 
 
 #! scopes - right now its just for one role, make it also in mysql database so taht user can have mutliple roles
+#! when stoped and started it will remenger the last logged in user and will show, but the users doesnt have valid token repair
 @app.post("/token", tags=["authentication"])
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(auth.get_db),) -> schemas.Token:
     user = auth.authenticate_user(db, form_data.username, form_data.password)
@@ -142,29 +86,8 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-
-
-# async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-#     credentials_exception = HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail="Could not validate credentials",
-#         headers={"WWW-Authenticate": "Bearer"},
-#     )
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         username: str = payload.get("sub")
-#         if username is None:
-#             raise credentials_exception
-#         user = db.query(models.User).filter(models.User.username == username).first()
-#         if user is None:
-#             raise credentials_exception
-#     except JWTError:
-#         raise credentials_exception
-#     return user
-
-
-
-
+#! TODO frontend 
+#! TODO admin can change users roles
 @app.post("/register", response_model=schemas.UserInDB)
 def register_user(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     # Check if the username already exists
@@ -183,6 +106,10 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     
     # Return the newly created user
     return db_user
+
+
+#TODO something like that if there will be that the user have permission for only specific data, than id should somehow know which data he wants to acces and only show it to him.
+#TODO probably users that have permissions for specific DBs?
 
 @app.post("/login")
 def login(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
@@ -239,7 +166,7 @@ class ReadData(BaseModel):
 
 # TODO read data but manage so that there isnt same data fetched twice, so to save bandwidth
 # TODO the data needs to have field or tag that specifies which protocos it is.
-    
+# TODO neco todo
 @app.post("/read_data", tags=["Read"])
 async def read_data(readData: ReadData, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):  
     try:
@@ -636,10 +563,19 @@ async def available_data_types(request: Request, current_user: Annotated[models.
 @app.get("/measurements")
 async def get_measurements(current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     query_api = client.query_api()
+    query = f'''
+    import "influxdata/influxdb/schema"
+    
+    schema.measurements(bucket: "{INFLUXDB_BUCKET}")
+    '''
+
     query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: -1h) |> keep(columns: ["_field"]) |> distinct(column: "_field")'
     result = query_api.query(org=INFLUXDB_ORG, query=query)
+    print(result)
     measurements = [record.get_value() for table in result for record in table.records]
+    print(measurements)
     return {"measurements": measurements}
+
 
 @app.get("/filtered_measurements_with_fields")
 async def get_filtered_measurements_with_fields(
@@ -675,3 +611,39 @@ async def get_filtered_measurements_with_fields(
         measurements_with_fields[measurement] = fields
     
     return {"measurements_with_fields": measurements_with_fields}
+
+
+
+@app.get("/filtered_measurements_with_tags")
+async def get_filtered_measurements_with_tags(
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
+    slaveID: Optional[str] = Query(None), masterID: Optional[str] = Query(None), modbusType: Optional[str] = Query(None)):
+    query_api = client.query_api()
+    # Construct the filter part of the query based on the provided tags
+    filters = ""
+    if slaveID:
+        filters += f' |> filter(fn: (r) => r.slaveID == "{slaveID}")'
+    if masterID:
+        filters += f' |> filter(fn: (r) => r.masterID == "{masterID}")'
+    if modbusType:
+        filters += f' |> filter(fn: (r) => r.modbusType == "{modbusType}")'
+    
+    # Base query with filters applied
+    base_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: -1h) {filters}'
+    
+    # Query to get list of filtered measurements
+    measurements_query = base_query + ' |> keep(columns: ["_measurement"]) |> distinct(column: "_measurement")'
+    measurements_result = query_api.query(org=INFLUXDB_ORG, query=measurements_query)
+    measurements = [record.get_value() for table in measurements_result for record in table.records]
+    
+    # Dictionary to hold the filtered measurements and their tags
+    measurements_with_tags: dict[str, List[str]] = {}
+
+    # Loop through each filtered measurement to query their tags
+    for measurement in measurements:
+        tags_query = base_query + f' |> filter(fn: (r) => r._measurement == "{measurement}") |> keys() |> keep(columns: ["_value"]) |> distinct(column: "_value")'
+        tags_result = query_api.query(org=INFLUXDB_ORG, query=tags_query)
+        tags = [record.get_value() for table in tags_result for record in table.records if record.get_value().startswith('_') is False]  # Exclude system tags/fields
+        measurements_with_tags[measurement] = tags
+    
+    return {"measurements_with_tags": measurements_with_tags}

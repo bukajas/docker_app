@@ -8,6 +8,7 @@ import DeleteDataForm from "./delete"; // Component for deleting data
 import DataEditor from "./edit"; // Component for editing data
 import Login from "./login"; // Login component
 import DataExportForm from "./export_csv"; // Component for exporting data
+import Measurements from "./select_protocol_dev";
 
 export default function Home() {
   const [activeComponent, setActiveComponent] = useState('default');
@@ -67,6 +68,9 @@ export default function Home() {
       <ListItem button onClick={() => setActiveComponent('export')}>
         <ListItemText primary="Export Data" />
       </ListItem>
+      <ListItem button onClick={() => setActiveComponent('select_dev')}>
+        <ListItemText primary="select_dev" />
+      </ListItem>
       {/* Add other list items for additional actions */}
     </List>
   );
@@ -95,6 +99,7 @@ export default function Home() {
         {activeComponent === 'edit' && <DataEditor />}
         {activeComponent === 'delete' && <DeleteDataForm />}
         {activeComponent === 'export' && <DataExportForm />}
+        {activeComponent === 'select_dev' && <Measurements />}
       </Container>
     </div>
   );
