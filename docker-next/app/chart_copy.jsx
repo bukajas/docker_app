@@ -91,7 +91,7 @@ const LineChartPage = () => {
         modbusType: modbusType
       };
     });
-    console.log(requestBodyForEachDataType)
+    // console.log(requestBodyForEachDataType)
     const promises = requestBodyForEachDataType.map(async (requestBody) => {
       try {
         const token = localStorage.getItem('token');
@@ -243,6 +243,7 @@ const LineChartPage = () => {
     <Grid container spacing={2}>
       <Grid item xs={8}>
         <div>
+          {/* {console.log(chartData)} */}
           <Line ref={chartRef} data={chartData} options={options} />
         </div>
       </Grid>

@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import pytz
 import random
-from typing import Optional, List, Annotated
+from typing import Optional, List, Annotated, Dict
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBasic, HTTPBasicCredentials
 import secrets 
@@ -185,6 +185,37 @@ async def read_data(readData: ReadData, current_user: Annotated[models.User, Sec
         return {"data": data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class DynamicReadData(BaseModel):
+    measurement: str
+    range: str
+    tag_filters: Optional[Dict[str, str]] = None
+
+@app.post("/read_data_dynamic", tags=["Read"])
+async def read_data_dynamic(readData: DynamicReadData, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
+    try:
+        query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{readData.range}m) |> filter(fn: (r) => r["_measurement"] == "{readData.measurement}")'
+        
+        # Dynamically adding filters based on the tag_filters dictionary
+        if readData.tag_filters:
+            for tag, value in readData.tag_filters.items():
+                query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
+        print(query)
+        tables = client.query_api().query(query)
+        data = []
+        for table in tables:
+            for record in table.records:
+                data.append({"time": record.get_time().isoformat(), "value": record.get_value(), "field": record.get_field()})
+                
+        return {"data": data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+
 
 # TODO add normalization
 # TODO add agregation (depends if on begining or when its read)
@@ -616,20 +647,21 @@ async def get_filtered_measurements_with_fields(
 
 @app.get("/filtered_measurements_with_tags")
 async def get_filtered_measurements_with_tags(
-    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
-    slaveID: Optional[str] = Query(None), masterID: Optional[str] = Query(None), modbusType: Optional[str] = Query(None)):
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
+    # slaveID: Optional[str] = Query(None), masterID: Optional[str] = Query(None), modbusType: Optional[str] = Query(None)):
     query_api = client.query_api()
     # Construct the filter part of the query based on the provided tags
-    filters = ""
-    if slaveID:
-        filters += f' |> filter(fn: (r) => r.slaveID == "{slaveID}")'
-    if masterID:
-        filters += f' |> filter(fn: (r) => r.masterID == "{masterID}")'
-    if modbusType:
-        filters += f' |> filter(fn: (r) => r.modbusType == "{modbusType}")'
+    # filters = ""
+    # if slaveID:
+    #     filters += f' |> filter(fn: (r) => r.slaveID == "{slaveID}")'
+    # if masterID:
+    #     filters += f' |> filter(fn: (r) => r.masterID == "{masterID}")'
+    # if modbusType:
+    #     filters += f' |> filter(fn: (r) => r.modbusType == "{modbusType}")'
     
     # Base query with filters applied
-    base_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: -1h) {filters}'
+    base_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: -1d)'
+    # base_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: -1d) {filters}'
     
     # Query to get list of filtered measurements
     measurements_query = base_query + ' |> keep(columns: ["_measurement"]) |> distinct(column: "_measurement")'

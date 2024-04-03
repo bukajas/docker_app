@@ -1,7 +1,4 @@
-import { useState, useEffect, useRef} from 'react';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
+import React, { useState, useRef,  useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -12,29 +9,22 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  List,
+  ListItem,
+  Paper,
 } from '@mui/material';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import Chart from 'chart.js/auto';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-function Measurements() {
-  const [measurements, setMeasurements] = useState({});
+function ChartComponent({ measurementId, handleDelete }) {
   const [selectedMeasurement, setSelectedMeasurement] = useState('');
   const [range, setRange] = useState('');
   const [tagFilters, setTagFilters] = useState({});
-  const [data, setData] = useState(null);
   const [chartData, setChartData] = useState({});
-  
+  const [data, setData] = useState(null);
+  const [measurements, setMeasurements] = useState({});
+
+
   const chartRef = useRef(null);
 
   useEffect(() => {
@@ -136,11 +126,8 @@ function Measurements() {
       },
     },
   };
-
-
-
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 2 }}>
+    <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 2, mb: 2 }}>
       <Grid container spacing={2}>
         <Grid item xs={8}>
           <Typography variant="h6" component="div">
@@ -148,12 +135,12 @@ function Measurements() {
           </Typography>
           {chartData.labels && (
             <Box sx={{ mt: 2 }}>
-              <Line data={chartData} options={options} ref={chartRef} />
+              <Line data={chartData} options={options} />
             </Box>
           )}
         </Grid>
         <Grid item xs={4}>
-          <FormControl fullWidth>
+        <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel id="measurement-select-label">Measurement</InputLabel>
             <Select
               labelId="measurement-select-label"
@@ -169,7 +156,10 @@ function Measurements() {
               ))}
             </Select>
           </FormControl>
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <Paper style={{ maxHeight: 400, overflow: 'auto' }} component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+            <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
+              Submit
+            </Button>
             <TextField
               label="Range (minutes)"
               variant="outlined"
@@ -190,14 +180,15 @@ function Measurements() {
                   sx={{ mt: 2 }}
                 />
               ))}
-            <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-              Submit
-            </Button>
-          </Box>
+          </Paper>
+          
         </Grid>
       </Grid>
+      <Button variant="contained" color="secondary" onClick={() => handleDelete(measurementId)}>
+        Delete This Chart
+      </Button>
     </Box>
   );
 }
 
-export default Measurements;
+export default ChartComponent;

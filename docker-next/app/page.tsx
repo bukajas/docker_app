@@ -9,6 +9,7 @@ import DataEditor from "./edit"; // Component for editing data
 import Login from "./login"; // Login component
 import DataExportForm from "./export_csv"; // Component for exporting data
 import Measurements from "./select_protocol_dev";
+import ChartContainer from "./chart_container"
 
 export default function Home() {
   const [activeComponent, setActiveComponent] = useState('default');
@@ -99,7 +100,7 @@ export default function Home() {
         {activeComponent === 'edit' && <DataEditor />}
         {activeComponent === 'delete' && <DeleteDataForm />}
         {activeComponent === 'export' && <DataExportForm />}
-        {activeComponent === 'select_dev' && <Measurements />}
+        {activeComponent === 'select_dev' && <ChartContainer />}
       </Container>
     </div>
   );
