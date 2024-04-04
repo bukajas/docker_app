@@ -2,14 +2,16 @@
 "use client";
 import { AppBar, Toolbar, Button, Drawer, List, ListItem, ListItemText, Container, Typography } from '@mui/material';
 import React, { useState } from 'react';
-import LineChartPage from "./chart_copy"; // Import your chart component
+import LineChartPage from "./chart/chart_copy"; // Import your chart component
 
 import DeleteDataForm from "./delete"; // Component for deleting data
 import DataEditor from "./edit"; // Component for editing data
 import Login from "./login"; // Login component
 import DataExportForm from "./export_csv"; // Component for exporting data
-import Measurements from "./select_protocol_dev";
-import ChartContainer from "./chart_container"
+import Measurements from "./chart/select_protocol_dev";
+import ChartContainer from "./chart/chart_container"
+import Register from "./Registration"
+import UsersPage from "./change_roles"
 
 export default function Home() {
   const [activeComponent, setActiveComponent] = useState('default');
@@ -85,6 +87,8 @@ export default function Home() {
             Graph Dashboard
           </Typography>
         <Login />
+        <Register />
+        <UsersPage />
         </Toolbar>
       </AppBar>
       <Drawer

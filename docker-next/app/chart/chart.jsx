@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 import { ResizableBox } from 'react-resizable';
-import ExportButton from './export_image';
+import ExportButton from '../export_image';
 import 'react-resizable/css/styles.css'; // Import CSS for react-resizable
 
 Chart.register(...registerables);

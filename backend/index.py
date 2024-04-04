@@ -128,20 +128,27 @@ async def secure_endpoint(current_user: Annotated[models.User, Security(auth.get
 
 
 
+
+@app.get("/users", response_model=List[schemas.UserDisplay])
+def read_users(db: Session = Depends(auth.get_db)):
+    users = db.query(models.UserList).all()
+    return users
+
+
 @app.patch("/users/{user_id}/role", response_model=schemas.UserInDB)
 def update_user_role(
     user_id: int, 
-    new_role: str, 
+    role_update: schemas.RoleUpdate,  # Use the RoleUpdate model for input validation
     current_user: Annotated[models.User, Security(auth.get_current_active_user, scopes=["admin"])], 
     db: Session = Depends(auth.get_db)
 ):
-    # Fetch the user to update from the DB
+     # Fetch the user to update from the DB
     user_to_update = db.query(models.User).filter(models.User.id == user_id).first()
     if not user_to_update:
         raise HTTPException(status_code=404, detail="User not found")
 
     # Update the user's role and commit changes
-    user_to_update.role = new_role
+    user_to_update.role = role_update.new_role  # Use the validated new_role
     db.commit()
     db.refresh(user_to_update)
     return user_to_update

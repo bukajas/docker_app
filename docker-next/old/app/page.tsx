@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import ApiFetchPage from "../../app/te";
-import LineChartPage from "../../app/chart_copy";
+import LineChartPage from "../../app/chart/chart_copy";
 import DeleteDataForm from "../../app/delete";
 import DataEditor from "../../app/edit"; // Import the Edit page component
 import Login from "../../app/login";
