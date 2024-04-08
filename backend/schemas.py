@@ -1,5 +1,29 @@
 # schemas.py
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
+from typing import Dict, Optional
+from datetime import datetime
+
+
+#Delete
+class DeleteDataRequest(BaseModel):
+    measurement: str
+    tags: Dict[str, str] = Field(default_factory=dict)
+    minutes: Optional[int] = None
+    start_time: Optional[datetime] = None
+    stop_time: Optional[datetime] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "measurement": "coil_list",
+                "tags": {"unit": "1"},
+                "minutes": 10,  # Optional, use if start_time and stop_time are not provided
+                "start_time": "2023-01-01T00:00:00Z",  # Optional
+                "stop_time": "2023-01-01T01:00:00Z",  # Optional
+            }
+        }
+
+    
 
 class UserCreate(BaseModel):
     username: str

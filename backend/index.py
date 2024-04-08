@@ -23,7 +23,8 @@ import  models, schemas, auth
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-
+from dependencies import client, write_api
+from routers import delete
 
 
 
@@ -57,9 +58,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(delete.router)
+
 # Initialize InfluxDB client
-client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
-write_api = client.write_api(write_options=SYNCHRONOUS)
+# client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
+# write_api = client.write_api(write_options=SYNCHRONOUS)
 
 
 
@@ -214,7 +218,7 @@ async def read_data_dynamic(readData: DynamicReadData, current_user: Annotated[m
         for table in tables:
             for record in table.records:
                 data.append({"time": record.get_time().isoformat(), "value": record.get_value(), "field": record.get_field()})
-                
+                print(record.get_time().isoformat())
         return {"data": data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -277,29 +281,6 @@ async def receive_modbus_data(modbus_data: ModbusData, current_user: Annotated[m
 
 # ! create clases for upload, modification and deletion of data in/from database
 
-# TODO delete class
-# ? it can be, so that two types of deletion, where first the admin has something shown, and than when is deletes it deletes the timerange that he has shown and also can specify what to delete
-# ? second is it will print the data, and he can specify what to delete from whole DB.
-
-class DeleteDataRequest(BaseModel):
-    measurement: str
-    hours: int
-
-@app.delete("/delete_data", tags=["Delete"])
-async def delete_data_from_database(request_body: DeleteDataRequest, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
-    delete_api = client.delete_api()
-    stop = datetime.now(pytz.UTC)
-    start = stop - timedelta(minutes=request_body.hours)
-    start_str = start.isoformat()
-    stop_str = stop.isoformat()
-
-    try:
-        delete_api.delete(start_str, stop_str, f'_measurement="{request_body.measurement}"', bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
-        return {"message": f"data from measurement 'measurement' deleted succesfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    
 
 
 # TODO modify class

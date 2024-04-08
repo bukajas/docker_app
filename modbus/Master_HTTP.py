@@ -27,8 +27,15 @@ def read_holding_registers():
         new_list = []
         for i in range(len(rr.registers)):
             new_list.append(random.randint(0,100))
-        data2 = 'vibration,VendorID=1a3!de,NetworkType=serial,unit=1,speed=10.3,protocol=ethernet/ip data={}'.format(new_list[0])  # Formulate your data here
-        data_list = [data1,data2]
+        data2 = 'vibration,VendorID=1a3!de,NetworkType=serial,unit=1,speed=10.3,protocol=ethernet/ip data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
+        data3 = 'vibration,VendorID=sonic,NetworkType=serial,unit=2,speed=30,protocol=ethernet/ip data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
+        data4 = 'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed=30,protocol=ethernet/ip data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
+        data5 = 'coil_list,slaveID=1,masterID=1,unit=1,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100))  # Formulate your data here
+        data6 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100))  # Formulate your data here
+
+
+
+        data_list = [data1,data2,data3,data4,data5,data6]
         data = "\n".join(data_list)
         try:
             requests.post(telegraf_url, data=data, auth=auth, verify=False)

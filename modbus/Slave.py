@@ -19,7 +19,7 @@ def update_modbus_context(context):
         modbus_value = int(temperature)  # Example: convert 23.5°C to 235 for Modbus
         # Update the Modbus register (e.g., holding register 0)
         for i in range(5):
-            context[0].setValues(3, 1, [modbus_value]*5)
+            context[0].setValues(3, 1, [modbus_value,modbus_value+2,modbus_value+3,modbus_value+12,modbus_value+43,modbus_value+11,modbus_value+50])
 
         print("yo")
         print(modbus_value)
@@ -38,7 +38,7 @@ from pymodbus.server import StartTcpServer
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 
 # Initialize your data store
-store = ModbusSequentialDataBlock(0,[1,1,1,1,1,1,1,1,1,1,1,110])
+store = ModbusSequentialDataBlock(0,[1,2,3,4,5,1,1,1,1,1,1,110])
 context = ModbusSlaveContext(di=store, co=store, hr=store, ir=store)
 context = ModbusServerContext(slaves=context, single=True)
 
