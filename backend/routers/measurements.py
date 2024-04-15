@@ -51,9 +51,9 @@ async def get_measurements(current_user: Annotated[models.User, Security(auth.ge
 
     query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: -1h) |> keep(columns: ["_field"]) |> distinct(column: "_field")'
     result = query_api.query(org=INFLUXDB_ORG, query=query)
-    print(result)
+    # print(result)
     measurements = [record.get_value() for table in result for record in table.records]
-    print(measurements)
+    # print(measurements)
     return {"measurements": measurements}
 
 

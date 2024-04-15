@@ -31,7 +31,7 @@ async def export_csv(
     end_str = end_time.isoformat()
     
     
-    print(start_str,end_str)
+    # print(start_str,end_str)
 
 
     
@@ -45,11 +45,11 @@ async def export_csv(
         for tag, value in export_request.tag_filters.items():
             query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
 
-        print(query)
+        # print(query)
 
 
         result = client.query_api().query_data_frame(query=query, org=INFLUXDB_ORG)
-        print(result)
+        # print(result)
         if not result.empty:
             output = StringIO()
             result.to_csv(output, index=False)

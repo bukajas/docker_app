@@ -66,14 +66,14 @@ export default function Home() {
       <ListItem button onClick={() => setActiveComponent('delete')}>
         <ListItemText primary="Delete Data" />
       </ListItem>
-      <ListItem button onClick={showChartView}>
+      {/* <ListItem button onClick={showChartView}>
         <ListItemText primary="Show Charts" />
-      </ListItem>
+      </ListItem> */}
       <ListItem button onClick={() => setActiveComponent('export')}>
         <ListItemText primary="Export Data" />
       </ListItem>
-      <ListItem button onClick={() => setActiveComponent('select_dev')}>
-        <ListItemText primary="select_dev" />
+      <ListItem button onClick={() => setActiveComponent('Graphs')}>
+        <ListItemText primary="Graphs" />
       </ListItem>
       {/* Add other list items for additional actions */}
     </List>
@@ -101,11 +101,11 @@ export default function Home() {
       <Container>
         {/* Conditionally render components based on activeComponent state */}
         {activeComponent === 'default' && <Typography>Welcome to the Graph Dashboard</Typography>}
-        {activeComponent === 'charts' && renderCharts()}
+        {/* {activeComponent === 'charts' && renderCharts()} */}
         {activeComponent === 'edit' && <DataEditor />}
         {activeComponent === 'delete' && <DeleteDataForm />}
         {activeComponent === 'export' && <DataExportForm2 />}
-        {activeComponent === 'select_dev' && <ChartContainer />}
+        {activeComponent === 'Graphs' && <ChartContainer />}
 
       </Container>
     </div>

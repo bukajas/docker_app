@@ -158,7 +158,7 @@ async def modify_data_update(
         for tag, value in update_request.tag_filters.items():
             point.tag(tag, value)
         
-        print(point)
+        # print(point)
         write_api.write(bucket=INFLUXDB_BUCKET, record=point)
 
         return {"message": "Data updated successfully."}
