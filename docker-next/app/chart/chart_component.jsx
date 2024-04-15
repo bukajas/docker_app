@@ -104,7 +104,11 @@ function ChartComponent({ measurementId, handleDelete }) {
       }
 
       const responseData = await response.json();
-      console.log(responseData)
+      console.log("data",responseData)
+      const sortedData = responseData.data.sort((a, b) => {
+        return new Date(a.time) - new Date(b.time);
+      });
+      console.log(sortedData)
       setData(responseData.data);
     } catch (error) {
       console.error('Failed to fetch data:', error);

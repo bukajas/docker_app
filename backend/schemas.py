@@ -23,7 +23,66 @@ class DeleteDataRequest(BaseModel):
             }
         }
 
-    
+class EditReadDataRequest(BaseModel):
+    measurement: str
+    tag_filters: Dict[str, str] = Field(default_factory=dict)
+    rangeInMinutes: Optional[int] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "measurement": "coil_list",
+                "tag_filters": {"unit": "1"},
+                "rangeInMinutes": 10,  # Optional, use if start_time and stop_time are not provided
+            }
+        }
+
+class EditDeleteDataRequest(BaseModel):
+    measurement: str
+    tag_filters: Dict[str, str] = Field(default_factory=dict)
+    time: Optional[datetime] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "measurement": "coil_list",
+                "tag_filters": {"unit": "1"},
+                "time": "2023-01-01T01:00:00Z",  # Optional, use if specific time needs to be targeted
+            }
+        }
+class EditUpdateDataRequest(BaseModel):
+    measurement: str
+    tag_filters: Dict[str, str] = Field(default_factory=dict)
+    time: Optional[datetime] = None
+    new_value: float
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "measurement": "coil_list",
+                "tag_filters": {"unit": "1"},
+                "time": "2023-01-01T01:00:00Z",  # Optional, use if specific time needs to be targeted
+                "new_value": 10,
+            }
+        }   
+
+class ExportDataRequest(BaseModel):
+    measurement: str
+    tag_filters: Dict[str, str] = Field(default_factory=dict)
+    start_time: str
+    end_time: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "measurement": "coil_list",
+                "tag_filters": {"unit": "1"},
+                "start_time": "2024-04-12T13:18",  # Optional, use if specific time needs to be targeted
+                "end_time": "2024-04-12T13:18",
+            }
+        } 
+
+
 
 class UserCreate(BaseModel):
     username: str

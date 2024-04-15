@@ -21,9 +21,13 @@ def read_holding_registers():
     rr = client.read_holding_registers(1, 5, unit=1)
     if not rr.isError():
         log.debug(f"Read holding registers: {rr.registers}")
-        
-        print(rr.registers[0])
-        data1 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=2,protocol=modbus data={}'.format(rr.registers[0])  # Formulate your data here
+        current_time = time.localtime()
+
+        # Extract seconds from the current time
+        seconds = current_time.tm_sec
+
+        print(type(rr.registers[0]))
+        data1 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=2,protocol=modbus data={}'.format(100+seconds+1)  # Formulate your data here
         new_list = []
         for i in range(len(rr.registers)):
             new_list.append(random.randint(0,100))

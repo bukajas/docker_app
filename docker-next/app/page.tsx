@@ -4,14 +4,15 @@ import { AppBar, Toolbar, Button, Drawer, List, ListItem, ListItemText, Containe
 import React, { useState } from 'react';
 import LineChartPage from "./chart/chart_copy"; // Import your chart component
 
-import DeleteDataForm from "./delete"; // Component for deleting data
-import DataEditor from "./edit"; // Component for editing data
+import DeleteDataForm from "./delete/delete"; // Component for deleting data
+import DataEditor from "./edit/edit"; // Component for editing data
 import Login from "./login"; // Login component
-import DataExportForm from "./export_csv"; // Component for exporting data
-import Measurements from "./chart/select_protocol_dev";
+import DataExportForm from "./export/export_csv"; // Component for exporting data
 import ChartContainer from "./chart/chart_container"
 import Register from "./Registration"
 import UsersPage from "./change_roles"
+import DataExportForm2 from "./export/export_CSV_dev";
+
 
 export default function Home() {
   const [activeComponent, setActiveComponent] = useState('default');
@@ -103,8 +104,9 @@ export default function Home() {
         {activeComponent === 'charts' && renderCharts()}
         {activeComponent === 'edit' && <DataEditor />}
         {activeComponent === 'delete' && <DeleteDataForm />}
-        {activeComponent === 'export' && <DataExportForm />}
+        {activeComponent === 'export' && <DataExportForm2 />}
         {activeComponent === 'select_dev' && <ChartContainer />}
+
       </Container>
     </div>
   );

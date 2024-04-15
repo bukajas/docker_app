@@ -25,7 +25,7 @@ async def delete_data_from_database(
     current_user: Annotated[models.User, Security(auth.get_current_active_user)],
 ):
     delete_api = client.delete_api()
-
+    print(request_body)
     # Ensure the datetime is timezone-aware and formatted with microseconds and UTC offset
     if request_body.start_time and request_body.stop_time:
         # Assuming start_time and stop_time are already timezone-aware datetime objects
@@ -38,11 +38,11 @@ async def delete_data_from_database(
         stop_str = stop.isoformat(timespec='microseconds')
     else:
         raise HTTPException(status_code=400, detail="Either minutes or start_time and stop_time must be provided.")
-
+    print(start_str)
     predicate = f'_measurement="{request_body.measurement}"'
     for tag_key, tag_value in request_body.tags.items():
         predicate += f' AND {tag_key}="{tag_value}"'
-
+    print(start_str, stop_str, predicate)
     try:
         delete_api.delete(start_str, stop_str, predicate, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
         return {"message": f"Data from measurement '{request_body.measurement}' and specified tags deleted successfully."}

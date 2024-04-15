@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import ApiFetchPage from "../../app/te";
 import LineChartPage from "../../app/chart/chart_copy";
-import DeleteDataForm from "../../app/delete";
-import DataEditor from "../../app/edit"; // Import the Edit page component
+import DeleteDataForm from "../../app/delete/delete";
+import DataEditor from "../../app/edit/edit"; // Import the Edit page component
 import Login from "../../app/login";
-import DataExportForm from "../../app/export_csv"
+import DataExportForm from "../../app/export/export_csv"
 
 export default function Home() {
   const [showDefault, setShowDefault] = useState(true);

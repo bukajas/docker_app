@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FileDownload from 'js-file-download';
 
@@ -20,7 +20,6 @@ const DataExportForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       // Calculate time range from minutes ago if provided
       let computedFromTime = fromTime;
@@ -54,6 +53,37 @@ const DataExportForm = () => {
       console.error('Error exporting data:', error);
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Ensure you have a token stored in localStorage
+        const response = await fetch('http://localhost:8000/filtered_measurements_with_tags', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setMeasurements(data.measurements_with_tags);
+      } catch (error) {
+        console.error('There was an error fetching the measurements:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
+
+
+
+
+
+
+
+
 
   return (
     <form onSubmit={handleSubmit}>

@@ -114,8 +114,12 @@ function Measurements() {
       }
 
       const responseData = await response.json();
-      console.log(responseData)
-      setData(responseData.data);
+      console.log("data",responseData)
+      const sortedData = responseData.data.sort((a, b) => {
+        return new Date(a.time) - new Date(b.time);
+      });
+      console.log("sorted",sortedData)
+      setData(sortedData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
