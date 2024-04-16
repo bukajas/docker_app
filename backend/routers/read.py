@@ -96,7 +96,7 @@ async def read_data_dynamic(
                 data.append(record_dict)
 
         grouped_data = group_data(data)
-
+        print(grouped_data)
         
         return {"data": grouped_data}
     except Exception as e:

@@ -17,6 +17,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  FormControlLabel,
+  Switch,
+
   Paper
 } from '@mui/material';
 import { format } from 'date-fns';
@@ -29,6 +32,14 @@ const DataEditor = () => {
   const [data, setData] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editValue, setEditValue] = useState('');
+  const [useMinutesAgo, setUseMinutesAgo] = useState(false);
+  const [fromTime, setFromTime] = useState('');
+  const [toTime, setToTime] = useState('');
+  const [range, setRange] = useState('');
+  const [rangeUnit, setRangeUnit] = useState('minutes'); // Default value is minutes
+  const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
+  const [tags, setTags] = useState([]);
+
 
 
   const formatDataList = (dataList) => {
@@ -73,13 +84,41 @@ const DataEditor = () => {
     setTagFilters((prevFilters) => ({ ...prevFilters, [tag]: value }));
   };
 
+  const handleSwitchChange = (event) => {
+    setUseMinutesAgo(event.target.checked);
+    if (event.target.checked) {
+      setFromTime('');
+      setToTime('');
+    } else {
+      setRange('');
+    }
+  };
+
+  const handleNow = () => {
+    const now = new Date().toISOString().slice(0, 16);
+    setFromTime(now);
+    setToTime(now);
+  };
+
+  useEffect(() => {
+    if (fromTime && toTime || range) {
+      setTimeFrameSubmitted(true);
+    } else {
+      setTimeFrameSubmitted(false);
+    }
+  }, [fromTime, toTime, range]); // Dependencies on time inputs
+
   const fetchData = async () => {
     try {
       const body = {
         measurement: selectedMeasurement,
-        rangeInMinutes,
+        range,
         tag_filters: tagFilters,
+        start_time: fromTime,
+        end_time: toTime,
+        interval: rangeUnit
       }
+      console.log(body)
       const token = localStorage.getItem('token');
       const response = await fetch('http://127.0.0.1:8000/modify_data_read', {
         method: 'POST',
@@ -98,12 +137,12 @@ const DataEditor = () => {
         return new Date(a.time) - new Date(b.time);
       });
       const formattedList = formatDataList(sortedData);
+      console.log(formattedList)
       setData(formattedList);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
   };
-
 
 
   const handleEdit = (index) => {
@@ -141,7 +180,7 @@ const handleDelete = async (index) => {
         },
         body: JSON.stringify(payload),
       });
-
+      setEditIndex(null); // Reset edit index
       fetchData(); // Refresh data after deletion
     } catch (error) {
       console.error('Error deleting data:', error);
@@ -197,6 +236,7 @@ const handleDelete = async (index) => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
+
       setEditIndex(null); // Reset edit index
       fetchData(); // Refresh data after update
     } catch (error) {
@@ -265,37 +305,101 @@ return (
       <Typography variant="h6">Data Editor</Typography>
       <Grid container spacing={2}>
         {/* Range, Measurement Selection, and Tag Filters remain the same */}
-        <Grid item xs={12}>
+        <FormControlLabel
+          control={<Switch checked={useMinutesAgo} onChange={handleSwitchChange} />}
+          label={useMinutesAgo ? 'Minutes from Now' : 'Start and End Time'}
+        />
+        {useMinutesAgo ? (
+                   <Grid container spacing={2}>
+                   <Grid item xs={6}>
+                     <TextField
+                       label="Range"
+                       variant="outlined"
+                       fullWidth
+                       value={range}
+                       onChange={(e) => setRange(e.target.value)}
+                       sx={{ mt: 2 }}
+                     />
+                  
+                   </Grid>
+                   <Grid item xs={6}>
+                     <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
+                       <InputLabel id="range-unit-label">Unit</InputLabel>
+                       <Select
+                         labelId="range-unit-label"
+                         id="range-unit-select"
+                         value={rangeUnit}
+                         onChange={(e) => setRangeUnit(e.target.value)}
+                         label="Unit"
+                       >
+                         <MenuItem value="seconds">Seconds</MenuItem>
+                         <MenuItem value="minutes">Minutes</MenuItem>
+                         <MenuItem value="hours">Hours</MenuItem>
+                       </Select>
+                     </FormControl>
+                   </Grid>
+                 </Grid>
+      ) : (
+        <>
           <TextField
-            label="Range in Minutes"
-            variant="outlined"
+            type="datetime-local"
+            label="From Time"
+            value={fromTime}
+            onChange={e => setFromTime(e.target.value)}
             fullWidth
-            value={rangeInMinutes}
-            onChange={(e) => setRangeInMinutes(e.target.value)}
-            sx={{ mt: 2 }}
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            inputProps={{
+              step: 1, // To include seconds
+            }}
           />
-        </Grid>
+          <TextField
+            type="datetime-local"
+            label="To Time"
+            value={toTime}
+            onChange={e => setToTime(e.target.value)}
+            fullWidth
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            inputProps={{
+              step: 1, // To include seconds
+            }}
+          />
+            <Button onClick={handleNow} variant="contained" color="primary">
+            Now
+          </Button>
+        </>
+      )}
         <Grid item xs={12}>
 
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel id="measurement-select-label">Measurement</InputLabel>
-            <Select
-              value={selectedMeasurement}
-              label="Measurement"
-              onChange={(e) => {
-                setSelectedMeasurement(e.target.value);
-              }}
-            >
-              <MenuItem value=""> 
-                <em>Default</em> 
-              </MenuItem>
+        {timeFrameSubmitted && (
+        <>
+      <FormControl fullWidth margin="normal">
+        <InputLabel>Measurement</InputLabel>
+        <Select
+          value={selectedMeasurement}
+          label="Measurement"
+          onChange={(e) => {
+            setSelectedMeasurement(e.target.value);
+            setTags({});
+          }}
+        >
+          <MenuItem value=""> {/* This MenuItem represents the empty default value */}
+            <em>Default</em> {/* This can be styled or changed to say "Select", "None", or any placeholder text */}
+          </MenuItem>
           {Object.keys(measurements).map((measurement) => (
             <MenuItem key={measurement} value={measurement}>
               {measurement}
             </MenuItem>
           ))}
-          </Select>
-            </FormControl>
+        </Select>
+      </FormControl>
+      </>
+      )}
             {selectedMeasurement &&
                 measurements[selectedMeasurement].map((tag, index) => (
                   <TextField

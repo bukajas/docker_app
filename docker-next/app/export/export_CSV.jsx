@@ -72,6 +72,14 @@ const DataExportForm2 = () => {
     setToTime(now);
   };
 
+  useEffect(() => {
+    if (fromTime && toTime || minutesAgo) {
+      setTimeFrameSubmitted(true);
+    } else {
+      setTimeFrameSubmitted(false);
+    }
+  }, [fromTime, toTime, minutesAgo]); // Dependencies on time inputs
+
 
   return (
     <form onSubmit={handleTimeFrameSubmit}>
@@ -120,11 +128,6 @@ const DataExportForm2 = () => {
       <Button onClick={handleNow} variant="contained" color="primary">
         Now
       </Button>
-      <Button onClick={handleTimeFrameSubmit} type="submit" variant="contained" color="primary">
-        Fetch Measurements
-      </Button>
-
-
       {timeFrameSubmitted && (
         <>
           <FormControl fullWidth sx={{ mt: 2 }}>

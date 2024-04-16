@@ -110,6 +110,7 @@ function ChartComponent({ measurementId, handleDelete }) {
       const colors = ['rgb(75, 192, 192)', 'rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 205, 86)', 'rgb(153, 102, 255)']; // Add more colors as needed
     
       // Iterate over each key in the filtered data object
+      console.log(selectedDataKey)
       Object.keys(filteredData).forEach((key, index) => {
         const datasetData = filteredData[key].map((d) => d._value);
         const datasetLabel = filteredData[key][0]._measurement; // Assuming all data points in the same key have the same measurement
@@ -206,9 +207,21 @@ function ChartComponent({ measurementId, handleDelete }) {
     }
   };
 
+  const footer = (tooltipItems) => {
+    let sum = 0;
+  
+    tooltipItems.forEach(function(tooltipItem) {
+      sum += tooltipItem.parsed.y;
+    });
+    return 'Sum: ' + sum;
+  };
   
   const options = {
     animation: false,
+    interaction: {
+      intersect: false,
+      mode: 'index',
+    },
     scales: {
       x: {
         ticks: {
@@ -221,6 +234,11 @@ function ChartComponent({ measurementId, handleDelete }) {
       },
     },
     plugins: {
+      tooltip: {
+        callbacks: {
+          footer: footer,
+        }
+      },
       zoom: {
         zoom: {
           wheel: {
@@ -236,7 +254,8 @@ function ChartComponent({ measurementId, handleDelete }) {
         display: false, // Hides the legend
       },
     },
-  };  
+  };
+  
 
   const handleNow = () => {
     const now = new Date().toISOString().slice(0, 16);
@@ -382,16 +401,16 @@ function ChartComponent({ measurementId, handleDelete }) {
       <Button variant="contained" color="secondary" onClick={() => handleDelete(measurementId)}>
         Delete This Chart
       </Button>
-      <ToggleButtonGroup
-  value={selectedDataKey}
-  onChange={(event, value) => handleDataKeyToggle(value)}
-  aria-label="data keys"
->
-  {dataKeys.map((key, index) => (
-    <ToggleButton key={index} value={key} aria-label={key}>
-      {key}
-    </ToggleButton>
-  ))}
+        <ToggleButtonGroup
+          value={selectedDataKey}
+          onChange={(event, value) => handleDataKeyToggle(value)}
+          aria-label="data keys"
+        >
+        {dataKeys.map((key, index) => (
+          <ToggleButton key={index} value={key} aria-label={key}>
+            {key}
+          </ToggleButton>
+        ))}
 </ToggleButtonGroup>
     </Box>
   );

@@ -59,20 +59,38 @@ async def modify_data_read(
     current_user: Annotated[models.User, Depends(auth.get_current_active_user)], 
     # If 'admin' scope is required, ensure your authentication logic handles it
 ):
-
     try:
-        query = f'from(bucket: "{INFLUXDB_BUCKET}") \
-            |> range(start: -{request_body.rangeInMinutes}m) \
-            |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
-        
-        for tag, value in request_body.tag_filters.items():
-            query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
+        if request_body.interval == "seconds":
+            interval = "s"
+        elif request_body.interval == "minutes":
+            interval = "m"
+        elif request_body.interval == "hours":
+            interval = "h"
+        print(request_body.range)
+        if request_body.range == "":
+            start_time = datetime.fromisoformat(request_body.start_time) # For example, 5 minutes before end_time
+            end_time = datetime.fromisoformat(request_body.end_time)
+            start_time = start_time.replace(tzinfo=pytz.UTC)
+            end_time = end_time.replace(tzinfo=pytz.UTC)
+            start_str = start_time.isoformat()
+            end_str = end_time.isoformat()
+
+
+            query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {start_str}, stop: {end_str}) |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
+
+        else:
+            query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{request_body.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
+
+        # query = f'from(bucket: "{INFLUXDB_BUCKET}") \
+        #     |> range(start: -{request_body.rangeInMinutes}m) \
+        #     |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
+        if request_body.tag_filters:
+            for tag, value in request_body.tag_filters.items():
+                query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
         
         # Debug: print the query to check if it's correctly formatted
-
         # Assuming 'client' is an instance of your InfluxDB client
         tables = client.query_api().query(query)
-        
         # Extract data values from the query result
         data = []
         for table in tables:
@@ -93,17 +111,6 @@ async def modify_data_read(
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-class UpdateDataModel(BaseModel):
-    start_time: datetime
-    end_time: datetime
-    measurement_name: str
-    field_name: str
-    slave_id: int
-    master_id: int
-    modbus_type: int
-    value: float  # or the appropriate type
 
 
 # ! problem - when i update the new data is written to it but it is exactly the same to than it lists it at the end of the list, and it looks like it isnt fetching new data

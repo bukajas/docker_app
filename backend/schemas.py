@@ -27,16 +27,26 @@ class DeleteDataRequest(BaseModel):
 
 
 class EditReadDataRequest(BaseModel):
+    # measurement: str
+    # tag_filters: Dict[str, str] = Field(default_factory=dict)
+    # rangeInMinutes: Optional[int] = None
+
     measurement: str
+    range: Optional[str] = None
     tag_filters: Dict[str, str] = Field(default_factory=dict)
-    rangeInMinutes: Optional[int] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    interval: Optional[str] = None
 
     class Config:
         schema_extra = {
             "example": {
                 "measurement": "coil_list",
                 "tag_filters": {"unit": "1"},
-                "rangeInMinutes": 10,  # Optional, use if start_time and stop_time are not provided
+                "range": "10",  
+                "start_time":"2024-04-12T13:18",
+                "end_time": "2024-04-12T13:18",
+                "interval": "minutes",
             }
         }
 
