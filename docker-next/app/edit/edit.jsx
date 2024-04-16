@@ -43,10 +43,6 @@ const DataEditor = () => {
         }
       });
   
-      // if (newItem.time) {
-      //   newItem.time = format(new Date(newItem.time), 'PPPpp');
-      // }
-  
       return newItem;
     });
   };
@@ -290,6 +286,9 @@ return (
                 setSelectedMeasurement(e.target.value);
               }}
             >
+              <MenuItem value=""> 
+                <em>Default</em> 
+              </MenuItem>
           {Object.keys(measurements).map((measurement) => (
             <MenuItem key={measurement} value={measurement}>
               {measurement}

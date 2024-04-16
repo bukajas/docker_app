@@ -7,11 +7,11 @@ import LineChartPage from "./chart/chart_copy"; // Import your chart component
 import DeleteDataForm from "./delete/delete"; // Component for deleting data
 import DataEditor from "./edit/edit"; // Component for editing data
 import Login from "./login"; // Login component
-import DataExportForm from "./export/export_csv"; // Component for exporting data
+import DataExportForm from "./export/export_csv_old"; // Component for exporting data
 import ChartContainer from "./chart/chart_container"
 import Register from "./Registration"
 import UsersPage from "./change_roles"
-import DataExportForm2 from "./export/export_CSV_dev";
+import DataExportForm2 from "./export/export_CSV";
 
 
 export default function Home() {

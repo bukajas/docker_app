@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MenuItem, TextField, Button, FormControl, InputLabel, Select, Box, RadioGroup, FormControlLabel, Radio, Grid } from '@mui/material';
+import { MenuItem, TextField, Button, FormControl, InputLabel, Select, Box, RadioGroup, FormControlLabel, Radio, Grid, Switch } from '@mui/material';
 
 const DeleteDataForm = () => {
   const [measurements, setMeasurements] = useState({});
@@ -8,11 +8,14 @@ const DeleteDataForm = () => {
   const [token, setToken] = useState('');
   const [timeOption, setTimeOption] = useState('minutes');
   const [minutes, setMinutes] = useState('');
-  // Separate states for date and time selections
-  const [startDate, setStartDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [useMinutesAgo, setUseMinutesAgo] = useState(false);
+  const [fromTime, setFromTime] = useState('');
+  const [toTime, setToTime] = useState('');
+  const [range, setRange] = useState('');
+  const [fetchEnabled, setFetchEnabled] = useState(false);
+  const [rangeUnit, setRangeUnit] = useState('minutes'); // Default value is minutes
+  const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,8 +50,11 @@ const DeleteDataForm = () => {
     const body = {
       measurement: selectedMeasurement, 
       tags,
-      ...(timeOption === 'minutes' ? { minutes: parseInt(minutes, 10) } : {}),
-      ...(timeOption === 'range' ? { start_time: `${startDate}T${startTime}`, stop_time: `${endDate}T${endTime}` } : {}),
+      range,
+      start_time: fromTime,
+      end_time: toTime,
+      // ...(timeOption === 'minutes' ? { range: parseInt(minutes, 10) } : {}),
+      // ...(timeOption === 'range' ? { start_time: `${startDate}T${startTime}`, stop_time: `${endDate}T${endTime}` } : {}),
     };
     console.log(body)
     try {
@@ -87,79 +93,114 @@ const DeleteDataForm = () => {
       />
     ));
   };
-
-  const renderTimeInput = () => {
-    if (timeOption === 'minutes') {
-      return (
-        <TextField
-          label="Delete Data Older Than (Minutes)"
-          type="number"
-          fullWidth
-          margin="normal"
-          value={minutes}
-          onChange={(e) => setMinutes(e.target.value)}
-          required
-          InputProps={{ inputProps: { min: 0 } }}
-        />
-      );
+  const handleSwitchChange = (event) => {
+    setUseMinutesAgo(event.target.checked);
+    if (event.target.checked) {
+      setFromTime('');
+      setToTime('');
     } else {
-      return (
-        <Grid container spacing={2}>
-          <Grid item xs={6}>
-            <TextField
-              label="Start Date"
-              type="date"
-              fullWidth
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              label="Start Time"
-              type="time"
-              fullWidth
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              required
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              label="End Date"
-              type="date"
-              fullWidth
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              label="End Time"
-              type="time"
-              fullWidth
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              required
-            />
-          </Grid>
-        </Grid>
-      );
+      setRange('');
     }
   };
 
+  const handleNow = () => {
+    const now = new Date().toISOString().slice(0, 16);
+    setFromTime(now);
+    setToTime(now);
+  };
+  // Add useEffect to monitor time inputs
+  useEffect(() => {
+    if (fromTime && toTime || range) {
+      setTimeFrameSubmitted(true);
+    } else {
+      setTimeFrameSubmitted(false);
+    }
+  }, [fromTime, toTime, range]); // Dependencies on time inputs
+
+
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+      
+      <FormControl component="fieldset">
+        <RadioGroup
+          row
+          name="timeOption"
+          value={timeOption}
+          onChange={(e) => setTimeOption(e.target.value)}
+        >
+          <FormControlLabel
+          control={<Switch checked={useMinutesAgo} onChange={handleSwitchChange} />}
+          label={useMinutesAgo ? 'Minutes from Now' : 'Start and End Time'}
+        />
+        {useMinutesAgo ? (
+                   <Grid container spacing={2}>
+                   <Grid item xs={6}>
+                     <TextField
+                       label="Range"
+                       variant="outlined"
+                       fullWidth
+                       value={range}
+                       onChange={(e) => setRange(e.target.value)}
+                       sx={{ mt: 2 }}
+                     />
+                  
+                   </Grid>
+                   <Grid item xs={6}>
+                     <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
+                       <InputLabel id="range-unit-label">Unit</InputLabel>
+                       <Select
+                         labelId="range-unit-label"
+                         id="range-unit-select"
+                         value={rangeUnit}
+                         onChange={(e) => setRangeUnit(e.target.value)}
+                         label="Unit"
+                       >
+                         <MenuItem value="seconds">Seconds</MenuItem>
+                         <MenuItem value="minutes">Minutes</MenuItem>
+                         <MenuItem value="hours">Hours</MenuItem>
+                       </Select>
+                     </FormControl>
+                   </Grid>
+                 </Grid>
+      ) : (
+        <>
+          <TextField
+            type="datetime-local"
+            label="From Time"
+            value={fromTime}
+            onChange={e => setFromTime(e.target.value)}
+            fullWidth
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            inputProps={{
+              step: 1, // To include seconds
+            }}
+          />
+          <TextField
+            type="datetime-local"
+            label="To Time"
+            value={toTime}
+            onChange={e => setToTime(e.target.value)}
+            fullWidth
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            inputProps={{
+              step: 1, // To include seconds
+            }}
+          />
+            <Button onClick={handleNow} variant="contained" color="primary">
+            Now
+          </Button>
+        </>
+      )}
+        </RadioGroup>
+      </FormControl>
+      {timeFrameSubmitted && (
+        <>
       <FormControl fullWidth margin="normal">
         <InputLabel>Measurement</InputLabel>
         <Select
@@ -170,26 +211,19 @@ const DeleteDataForm = () => {
             setTags({});
           }}
         >
+          <MenuItem value=""> {/* This MenuItem represents the empty default value */}
+            <em>Default</em> {/* This can be styled or changed to say "Select", "None", or any placeholder text */}
+          </MenuItem>
           {Object.keys(measurements).map((measurement) => (
             <MenuItem key={measurement} value={measurement}>
               {measurement}
             </MenuItem>
           ))}
         </Select>
+        {selectedMeasurement && renderTagInputs()}
       </FormControl>
-      {selectedMeasurement && renderTagInputs()}
-      <FormControl component="fieldset">
-        <RadioGroup
-          row
-          name="timeOption"
-          value={timeOption}
-          onChange={(e) => setTimeOption(e.target.value)}
-        >
-          <FormControlLabel value="minutes" control={<Radio />} label="Minutes" />
-          <FormControlLabel value="range" control={<Radio />} label="Start/End Time" />
-        </RadioGroup>
-      </FormControl>
-      {renderTimeInput()}
+      </>
+      )}
       <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
         Delete Data
       </Button>

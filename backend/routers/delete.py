@@ -25,26 +25,27 @@ async def delete_data_from_database(
     current_user: Annotated[models.User, Security(auth.get_current_active_user)],
 ):
     delete_api = client.delete_api()
-    # print(request_body)
     # Ensure the datetime is timezone-aware and formatted with microseconds and UTC offset
-    if request_body.start_time and request_body.stop_time:
-        # Assuming start_time and stop_time are already timezone-aware datetime objects
-        start_str = request_body.start_time.replace(tzinfo=pytz.UTC).isoformat(timespec='microseconds')
-        stop_str = request_body.stop_time.replace(tzinfo=pytz.UTC).isoformat(timespec='microseconds')
-    elif request_body.minutes is not None:
+    if request_body.start_time and request_body.end_time:
+        start_time = datetime.fromisoformat(request_body.start_time) # For example, 5 minutes before end_time
+        end_time = datetime.fromisoformat(request_body.end_time)
+        start_time1 = start_time.replace(tzinfo=pytz.UTC)
+        end_time1 = end_time.replace(tzinfo=pytz.UTC)
+        start_str = start_time1.isoformat()
+        end_str = end_time1.isoformat()
+    elif request_body.range is not "":
         stop = datetime.now(pytz.UTC)
-        start = stop - timedelta(minutes=request_body.minutes)
+        start = stop - timedelta(minutes=int(request_body.range))
         start_str = start.isoformat(timespec='microseconds')
-        stop_str = stop.isoformat(timespec='microseconds')
+        end_str = stop.isoformat(timespec='microseconds')
     else:
         raise HTTPException(status_code=400, detail="Either minutes or start_time and stop_time must be provided.")
-    # print(start_str)
     predicate = f'_measurement="{request_body.measurement}"'
     for tag_key, tag_value in request_body.tags.items():
         predicate += f' AND {tag_key}="{tag_value}"'
     # print(start_str, stop_str, predicate)
     try:
-        delete_api.delete(start_str, stop_str, predicate, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
+        delete_api.delete(start_str, end_str, predicate, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
         return {"message": f"Data from measurement '{request_body.measurement}' and specified tags deleted successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

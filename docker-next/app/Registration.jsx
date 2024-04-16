@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import axios from 'axios';
+import '../styles.css';
+
 
 const Register = () => {
     const [open, setOpen] = useState(false);
@@ -47,7 +49,7 @@ const Register = () => {
 
     return (
         <div>
-            <Button variant="outlined" onClick={handleClickOpen}>
+            <Button className="manage-users-button" variant="outlined" onClick={handleClickOpen}>
                 Register
             </Button>
             <Dialog open={open} onClose={handleClose}>

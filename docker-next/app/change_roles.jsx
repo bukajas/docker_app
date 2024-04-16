@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Dialog, DialogContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Select, MenuItem, Paper } from '@mui/material';
+import '../styles.css';
 
 const UsersPage = () => {
     const [users, setUsers] = useState([]);
@@ -52,8 +53,12 @@ const UsersPage = () => {
 
     return (
         <div>
-            <Button variant="outlined" onClick={handleClickOpen}>
-                Manage Users
+            <Button
+                className="manage-users-button"
+                variant="outlined"
+                onClick={handleClickOpen}
+                        >
+                            Manage Users
             </Button>
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
                 <DialogContent>
