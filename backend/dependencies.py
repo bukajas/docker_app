@@ -1,11 +1,5 @@
-from influxdb_client import InfluxDBClient, Point
+from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
-
-from fastapi import Header, HTTPException
-
-
-
-
 
 INFLUXDB_URL = "http://docker-influxdb:8086"
 INFLUXDB_ORG = "VUT"

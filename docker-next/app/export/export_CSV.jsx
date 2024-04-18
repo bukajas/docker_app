@@ -12,6 +12,7 @@ import {
   FormControlLabel,
   Switch,
   FormLabel,
+  Grid,
 } from '@mui/material';
 
 const DataExportForm2 = () => {
@@ -25,6 +26,8 @@ const DataExportForm2 = () => {
   const [minutesAgo, setMinutesAgo] = useState('');
   const [tagFilters, setTagFilters] = useState({});
   const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
+  const [range, setRange] = useState('');
+  const [rangeUnit, setRangeUnit] = useState('minutes'); // Default value is minutes
 
   const handleTagFilterChange = (tag, value) => {
     setTagFilters((prevFilters) => ({ ...prevFilters, [tag]: value }));
@@ -35,9 +38,9 @@ const DataExportForm2 = () => {
       const token = localStorage.getItem('token');
       let computedFromTime = fromTime;
       let computedToTime = toTime;
-      if (minutesAgo) {
+      if (range) {
         const now = new Date();
-        const from = new Date(now.getTime() - minutesAgo * 60000);
+        const from = new Date(now.getTime() - range * 60000);
         computedFromTime = from.toISOString().slice(0, 16);
         computedToTime = now.toISOString().slice(0, 16);
       }
@@ -60,6 +63,48 @@ const DataExportForm2 = () => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+        let computedFromTime = fromTime;
+        let computedToTime = toTime;
+        if (range) {
+          const now = new Date();
+          const from = new Date(now.getTime() - range * 1000);
+          computedFromTime = from.toISOString().slice(0, 16);
+          computedToTime = now.toISOString().slice(0, 16);
+        }
+
+       
+        const payload = {
+            measurement: selectedMeasurement,
+            tag_filters: tagFilters, 
+            start_time: fromTime,
+            range,
+            end_time: toTime,
+            interval: rangeUnit
+          };
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://127.0.0.1:8000/export_csv', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok: ' + response.statusText);
+      }
+      const csvContent = await response.text();
+      FileDownload(csvContent, 'export.csv');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+    }
+  };
+
+
+
   const handleTimeFrameSubmit = async (e) => {
     e.preventDefault();
     fetchData();
@@ -73,32 +118,65 @@ const DataExportForm2 = () => {
   };
 
   useEffect(() => {
-    if (fromTime && toTime || minutesAgo) {
+    if (fromTime && toTime || range) {
       setTimeFrameSubmitted(true);
+      fetchData();
     } else {
       setTimeFrameSubmitted(false);
+      fetchData();
     }
-  }, [fromTime, toTime, minutesAgo]); // Dependencies on time inputs
+  }, [fromTime, toTime, range]); // Dependencies on time inputs
 
+
+  const handleSwitchChange = (event) => {
+    setUseMinutesAgo(event.target.checked);
+    if (event.target.checked) {
+      setFromTime('');
+      setToTime('');
+    } else {
+      setRange('');
+    }
+  };
 
   return (
     <form onSubmit={handleTimeFrameSubmit}>
       <FormControl component="fieldset" margin="normal">
         <FormLabel component="legend">Time Input Mode</FormLabel>
         <FormControlLabel
-          control={<Switch checked={useMinutesAgo} onChange={(e) => setUseMinutesAgo(e.target.checked)} />}
+          control={<Switch checked={useMinutesAgo} onChange={handleSwitchChange} />}
           label={useMinutesAgo ? 'Minutes from Now' : 'Start and End Time'}
         />
       </FormControl>
       {useMinutesAgo ? (
-        <TextField
-          type="number"
-          label="Minutes from Now"
-          value={minutesAgo}
-          onChange={e => setMinutesAgo(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
+                   <Grid container spacing={2}>
+                   <Grid item xs={6}>
+                     <TextField
+                       label="Range"
+                       variant="outlined"
+                       fullWidth
+                       value={range}
+                       onChange={(e) => setRange(e.target.value)}
+                       sx={{ mt: 2 }}
+                     />
+                  
+                   </Grid>
+                   <Grid item xs={6}>
+                     <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
+                       <InputLabel id="range-unit-label">Unit</InputLabel>
+                       <Select
+                         labelId="range-unit-label"
+                         id="range-unit-select"
+                         value={rangeUnit}
+                         onChange={(e) => setRangeUnit(e.target.value)}
+                         label="Unit"
+                       >
+                         <MenuItem value="seconds">Seconds</MenuItem>
+                         <MenuItem value="minutes">Minutes</MenuItem>
+                         <MenuItem value="hours">Hours</MenuItem>
+                       </Select>
+                     </FormControl>
+                   </Grid>
+                 </Grid>
       ) : (
         <>
           <TextField
@@ -162,6 +240,9 @@ const DataExportForm2 = () => {
           ))}
         </>
       )}
+       <Button onClick={handleSubmit} type="submit" variant="contained" color="primary">
+        Export Data
+      </Button>
     </form>
   );
 };

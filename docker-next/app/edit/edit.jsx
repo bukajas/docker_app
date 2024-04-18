@@ -118,7 +118,6 @@ const DataEditor = () => {
         end_time: toTime,
         interval: rangeUnit
       }
-      console.log(body)
       const token = localStorage.getItem('token');
       const response = await fetch('http://127.0.0.1:8000/modify_data_read', {
         method: 'POST',
@@ -137,7 +136,7 @@ const DataEditor = () => {
         return new Date(a.time) - new Date(b.time);
       });
       const formattedList = formatDataList(sortedData);
-      console.log(formattedList)
+
       setData(formattedList);
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -191,7 +190,7 @@ const handleDelete = async (index) => {
 
 
   const handleUpdate = async (index) => {
-    console.log(data)
+
     if (editIndex === null) {
       console.error("No item selected for update");
       return;
@@ -221,7 +220,7 @@ const handleDelete = async (index) => {
       time: index["time"], // or deleteRangeInMinutes if using separate state
       new_value: editValue,
     };
-    console.log(payload)
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://127.0.0.1:8000/modify_data_update', {

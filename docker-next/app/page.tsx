@@ -7,12 +7,11 @@ import LineChartPage from "./chart/chart_copy"; // Import your chart component
 import DeleteDataForm from "./delete/delete"; // Component for deleting data
 import DataEditor from "./edit/edit"; // Component for editing data
 import Login from "./login"; // Login component
-import DataExportForm from "./export/export_csv_old"; // Component for exporting data
 import ChartContainer from "./chart/chart_container"
 import Register from "./Registration"
 import UsersPage from "./change_roles"
 import DataExportForm2 from "./export/export_CSV";
-
+import { AuthProvider } from './context/AuthContext';
 
 export default function Home() {
   const [activeComponent, setActiveComponent] = useState('default');
@@ -82,6 +81,7 @@ export default function Home() {
 
   return (
     <div>
+      <AuthProvider>
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
@@ -108,6 +108,7 @@ export default function Home() {
         {activeComponent === 'Graphs' && <ChartContainer />}
 
       </Container>
+      </AuthProvider>
     </div>
   );
 }

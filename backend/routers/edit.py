@@ -1,44 +1,15 @@
-from fastapi import FastAPI, HTTPException, Query, Depends, Header,Body, status, Response, Request, Security
-from influxdb_client import InfluxDBClient, Point
-from influxdb_client.client.write_api import SYNCHRONOUS
+from fastapi import HTTPException,  Depends, Security
+from influxdb_client import  Point
 from datetime import datetime, timedelta
-from networkx import expected_degree_graph
-import requests
-import json
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
 import pytz
-import random
-from typing import Optional, List, Annotated, Dict
-from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBasic, HTTPBasicCredentials
-import secrets 
-from jose import JWTError, jwt
-from io import StringIO
-import pandas as pd
-import os
-from fastapi import FastAPI, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from typing import Annotated
 import  models, schemas, auth
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from dependencies import client, write_api, INFLUXDB_URL,INFLUXDB_ORG,INFLUXDB_BUCKET,INFLUXDB_TOKEN
-from routers import delete, export
+from dependencies import client, INFLUXDB_ORG, INFLUXDB_BUCKET
 from fastapi import APIRouter
 
 
 
-
 router = APIRouter()
-
-
-
-
-
-
-
-
 
 
 
@@ -66,7 +37,6 @@ async def modify_data_read(
             interval = "m"
         elif request_body.interval == "hours":
             interval = "h"
-        print(request_body.range)
         if request_body.range == "":
             start_time = datetime.fromisoformat(request_body.start_time) # For example, 5 minutes before end_time
             end_time = datetime.fromisoformat(request_body.end_time)
@@ -81,9 +51,6 @@ async def modify_data_read(
         else:
             query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{request_body.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
 
-        # query = f'from(bucket: "{INFLUXDB_BUCKET}") \
-        #     |> range(start: -{request_body.rangeInMinutes}m) \
-        #     |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
         if request_body.tag_filters:
             for tag, value in request_body.tag_filters.items():
                 query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
@@ -135,7 +102,6 @@ async def modify_data_update(
         start_str = start_time.isoformat()
         end_str = end_time.isoformat()
 
-   
         # ! Here delete data and than write them.
         # Write the modified data back to InfluxDB
         write_api = client.write_api()
@@ -180,7 +146,6 @@ async def modify_data_delete(
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], 
     scopes=["admin"]
 ):    
-
     try:
         if delete_request.time is None:
             raise HTTPException(status_code=400, detail="Time parameter is missing.")

@@ -153,9 +153,7 @@ async def get_current_active_user(
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
-    print(form_data.scopes)
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    print([user.role])
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

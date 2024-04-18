@@ -1,8 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Security
 from schemas import DeleteDataRequest
-import models, auth, schemas
-from fastapi import FastAPI, HTTPException, Query, Depends, Header, status, Response, Request, Security
-from typing import Optional, List, Annotated, Dict
+import models, auth
+from typing import  Annotated
 import pytz
 from datetime import datetime, timedelta
 from dependencies import client, INFLUXDB_BUCKET, INFLUXDB_ORG
@@ -14,10 +13,6 @@ router = APIRouter()
 # TODO delete class
 # ? it can be, so that two types of deletion, where first the admin has something shown, and than when is deletes it deletes the timerange that he has shown and also can specify what to delete
 # ? second is it will print the data, and he can specify what to delete from whole DB.
-
-# class DeleteDataRequest(BaseModel):
-#     measurement: str
-#     hours: int
 
 @router.delete("/delete_data", tags=["Delete"])
 async def delete_data_from_database(
@@ -43,7 +38,6 @@ async def delete_data_from_database(
     predicate = f'_measurement="{request_body.measurement}"'
     for tag_key, tag_value in request_body.tags.items():
         predicate += f' AND {tag_key}="{tag_value}"'
-    # print(start_str, stop_str, predicate)
     try:
         delete_api.delete(start_str, end_str, predicate, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
         return {"message": f"Data from measurement '{request_body.measurement}' and specified tags deleted successfully."}

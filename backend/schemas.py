@@ -81,20 +81,23 @@ class EditUpdateDataRequest(BaseModel):
 
 class ExportDataRequest(BaseModel):
     measurement: str
+    range: Optional[str] = None
     tag_filters: Dict[str, str] = Field(default_factory=dict)
-    start_time: str
-    end_time: str
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    interval: Optional[str] = None
 
-    class Config:
+class Config:
         schema_extra = {
             "example": {
                 "measurement": "coil_list",
                 "tag_filters": {"unit": "1"},
-                "start_time": "2024-04-12T13:18",  # Optional, use if specific time needs to be targeted
+                "range": "10",  
+                "start_time":"2024-04-12T13:18",
                 "end_time": "2024-04-12T13:18",
+                "interval": "minutes",
             }
-        } 
-
+        }
 
 class ReadDataRequest(BaseModel):
     measurement: str
@@ -113,6 +116,16 @@ class ReadDataRequest(BaseModel):
                 "stop_time": "2023-01-01T01:00:00Z",  # Optional
             }
         }
+
+
+class DynamicReadData(BaseModel):
+    measurement: str
+    range: Optional[str] = None
+    interval: Optional[str] = None
+    tag_filters: Optional[Dict[str, str]] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+
 
 
 

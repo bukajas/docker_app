@@ -1,41 +1,16 @@
-from fastapi import FastAPI, HTTPException, Query, Depends, Header,Body, status, Response, Request, Security
-from influxdb_client import InfluxDBClient, Point
-from influxdb_client.client.write_api import SYNCHRONOUS
-from datetime import datetime, timedelta
-from networkx import expected_degree_graph
-import requests
-import json
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-import pytz
-import random
-from typing import Optional, List, Annotated, Dict
+from fastapi import HTTPException, Depends, status,  Security
+from datetime import timedelta
+from typing import Annotated
 from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBasic, HTTPBasicCredentials
-import secrets 
-from jose import JWTError, jwt
-from io import StringIO
-import pandas as pd
-import os
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 import  models, schemas, auth
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from dependencies import client, write_api, INFLUXDB_URL,INFLUXDB_ORG,INFLUXDB_BUCKET,INFLUXDB_TOKEN, ACCESS_TOKEN_EXPIRE_MINUTES
-from routers import delete, export, edit
+from dependencies import ACCESS_TOKEN_EXPIRE_MINUTES
 from fastapi import APIRouter
 
 
 
-
 router = APIRouter()
-
-
-
-
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

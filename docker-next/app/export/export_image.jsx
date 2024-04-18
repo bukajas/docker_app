@@ -3,8 +3,6 @@ import React from 'react';
 import { Button} from '@mui/material';
 const ExportButton = ({ chartRef }) => {
   const exportChart = () => {
-    console.log("he")
-    console.log(chartRef)
     if (chartRef.current) {
         const url = chartRef.current.toBase64Image(); // Directly use chartRef.current
         const link = document.createElement('a');

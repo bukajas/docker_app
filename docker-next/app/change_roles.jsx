@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { Button, Dialog, DialogContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Select, MenuItem, Paper } from '@mui/material';
+import { AuthContext } from './context/AuthContext';  // Make sure the path matches where the AuthContext is defined
 import '../styles.css';
 
 const UsersPage = () => {
     const [users, setUsers] = useState([]);
     const [open, setOpen] = useState(false);
+    const { scopes,isAuthenticated } = useContext(AuthContext); // Use useContext to access the current authentication context
 
     // Function to fetch users
     const fetchUsers = async () => {
@@ -44,12 +46,28 @@ const UsersPage = () => {
     };
 
     const handleClickOpen = () => {
-        setOpen(true);
+        if (hasAdminScope) {
+            setOpen(true);
+        } else {
+            alert('You do not have permission to manage users.');
+        }
     };
 
     const handleClose = () => {
         setOpen(false);
     };
+    const hasAdminScope = scopes.includes('admin');
+    const hasEmployeeScope = scopes.includes('employee');
+
+    {isAuthenticated && hasAdminScope && (
+        <div>This is some admin-only content.</div>
+    )}
+    {isAuthenticated && hasEmployeeScope && (
+        <div>This is some employee-only content.</div>
+    )}
+    if (!hasAdminScope) {
+        return <div></div>;
+    }
 
     return (
         <div>
@@ -57,8 +75,8 @@ const UsersPage = () => {
                 className="manage-users-button"
                 variant="outlined"
                 onClick={handleClickOpen}
-                        >
-                            Manage Users
+            >
+                Manage Users
             </Button>
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
                 <DialogContent>

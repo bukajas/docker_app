@@ -1,5 +1,4 @@
-"use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -8,55 +7,37 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-
+import { AuthContext } from './context/AuthContext'; // Assuming AuthContext is exported from here
 
 function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loggedInUsername, setLoggedInUsername] = useState('');
   const [open, setOpen] = useState(false); // Initially set to false to keep the dialog closed
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUsername = localStorage.getItem('username');
-    if (token && storedUsername) {
-      setIsLoggedIn(true);
-      setLoggedInUsername(storedUsername);
-    }
-  }, []);
-
+  const { updateAuth, scopes, username: storedUsername, isAuthenticated } = useContext(AuthContext);
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/token', `username=${username}&password=${password}`, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      });
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('username', username);
-      setIsLoggedIn(true);
-      setLoggedInUsername(username);
-      setOpen(false); // Close the dialog on successful login
+        const response = await axios.post('http://localhost:8000/token', `username=${username}&password=${password}`, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        });
+        updateAuth(response.data.access_token, username);
+        setOpen(false);
     } catch (error) {
-      console.error('Login error:', error);
-      alert('Login failed!');
+        console.error('Login error:', error);
+        alert('Login failed!');
     }
-  };
-
+};
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    setIsLoggedIn(false);
-    setLoggedInUsername('');
+    updateAuth(null); // Clear the auth context
     setOpen(false); // Close the dialog on logout
   };
 
   const fetchSecureMessage = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const { token } = useContext(AuthContext);
       const response = await axios.get('http://localhost:8000/secure-endpoint', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -69,12 +50,6 @@ function Login() {
     }
   };
 
-
-
-
-
-
-  
   const theme = createTheme({
     palette: {
       primary: {
@@ -85,6 +60,9 @@ function Login() {
       },
     },
   });
+  const hasAdminScope = scopes.includes('admin');
+  const hasEmployeeScope = scopes.includes('employee');
+  const hasBasicScope = scopes.includes('basic');
 
   return (
     <div>
@@ -94,12 +72,12 @@ function Login() {
           color="primary" 
           onClick={() => setOpen(true)} 
           style={{ minWidth: '200px', minHeight: '50px' }}>
-          {isLoggedIn ? `Logged in as ${loggedInUsername}` : "Login / Check Status"}
-        </Button>
+          {isAuthenticated ? `Logged in as ${storedUsername}` : "Login / Check Status"}
+      </Button>
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{isLoggedIn ? "Logged In" : "Login"}</DialogTitle>
+        <DialogTitle>{hasAdminScope || hasEmployeeScope || hasBasicScope ? "Logged In" : "Login"}</DialogTitle>
         <DialogContent>
-          {!isLoggedIn ? (
+          {!hasEmployeeScope && !hasAdminScope && !hasBasicScope ? (
             <form onSubmit={handleLogin}>
               <TextField
                 margin="dense"
@@ -130,7 +108,7 @@ function Login() {
             </form>
           ) : (
             <div>
-              <p>Welcome, {loggedInUsername}!</p>
+              <p>Welcome, {username}!</p>
               <Button onClick={handleLogout}>Logout</Button>
               <Button onClick={fetchSecureMessage}>Fetch Secure Message</Button>
               {message && <p>{message}</p>}
@@ -144,4 +122,3 @@ function Login() {
 }
 
 export default Login;
-

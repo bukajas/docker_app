@@ -9,8 +9,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  List,
-  ListItem,
   Paper,
   FormControlLabel,
   Switch,
@@ -37,7 +35,6 @@ function ChartComponent({ measurementId, handleDelete }) {
 
 
   const chartRef = useRef(null);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -52,7 +49,6 @@ function ChartComponent({ measurementId, handleDelete }) {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-
         const data = await response.json();
         setMeasurements(data.measurements_with_tags);
       } catch (error) {
@@ -110,7 +106,7 @@ function ChartComponent({ measurementId, handleDelete }) {
       const colors = ['rgb(75, 192, 192)', 'rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 205, 86)', 'rgb(153, 102, 255)']; // Add more colors as needed
     
       // Iterate over each key in the filtered data object
-      console.log(selectedDataKey)
+
       Object.keys(filteredData).forEach((key, index) => {
         const datasetData = filteredData[key].map((d) => d._value);
         const datasetLabel = filteredData[key][0]._measurement; // Assuming all data points in the same key have the same measurement
@@ -149,15 +145,6 @@ function ChartComponent({ measurementId, handleDelete }) {
     if (e) e.preventDefault();
 
     try {
-      console.log(JSON.stringify({
-        measurement: selectedMeasurement,
-        range,
-        interval: rangeUnit,
-        tag_filters: tagFilters,
-        start_time: fromTime,
-        end_time: toTime,
-
-      }))
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:8000/read_data_dynamic', {
         method: 'POST',
@@ -199,12 +186,12 @@ function ChartComponent({ measurementId, handleDelete }) {
 
   const handleDataKeyToggle = (value) => {
     setSelectedDataKey(value);
-    if (value.length > 0) {
-      value.forEach((key) => {
-        console.log('Clicked data key:', key);
-        console.log('Data value:', data[key]);
-      });
-    }
+    // if (value.length > 0) {
+    //   value.forEach((key) => {
+    //     console.log('Clicked data key:', key);
+    //     console.log('Data value:', data[key]);
+    //   });
+    // }
   };
 
   const footer = (tooltipItems) => {

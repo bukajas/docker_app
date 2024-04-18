@@ -8,7 +8,7 @@ import models, schemas
 from sqlalchemy.orm import Session
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from fastapi.security import OAuth2PasswordBearer
@@ -23,7 +23,6 @@ oauth2_scheme = OAuth2PasswordBearer(
     scopes={"me": "Read information about the current user.", "items": "Read items.",
             "basic": "basic no permisions", "admin": "all permisions", "employee": "almost all"},
 )
-
 
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@docker-mysql/auth_users"
 engine = create_engine(
@@ -89,7 +88,6 @@ async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str
     except (JWTError, ValidationError):
         raise credentials_exception
     user = get_user(db, username=token_data.username)
-        # user = db.query(models.User).filter(models.User.username == username).first()
     if user is None:
         raise credentials_exception
     for scope in security_scopes.scopes:

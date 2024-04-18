@@ -1,9 +1,9 @@
 from fastapi import HTTPException, Security
 from pydantic import BaseModel
-from typing import Optional, Annotated, Dict
-import  models, auth
-from dependencies import client, write_api, INFLUXDB_URL,INFLUXDB_ORG,INFLUXDB_BUCKET,INFLUXDB_TOKEN, ACCESS_TOKEN_EXPIRE_MINUTES
-from datetime import datetime, timedelta
+from typing import Annotated
+import  models, auth, schemas
+from dependencies import client, INFLUXDB_BUCKET
+from datetime import datetime
 from fastapi import APIRouter
 import pytz
 
@@ -43,19 +43,9 @@ async def read_data(readData: ReadData, current_user: Annotated[models.User, Sec
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class DynamicReadData(BaseModel):
-    measurement: str
-    range: Optional[str] = None
-    interval: Optional[str] = None
-    tag_filters: Optional[Dict[str, str]] = None
-    start_time: Optional[str] = None
-    end_time: Optional[str] = None
-
-
-
 @router.post("/read_data_dynamic", tags=["Read"])
 async def read_data_dynamic(
-    readData: DynamicReadData,
+    readData: schemas.DynamicReadData,
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     try:
         if readData.interval == "seconds":
@@ -64,7 +54,6 @@ async def read_data_dynamic(
             interval = "m"
         elif readData.interval == "hours":
             interval = "h"
-        print(readData.range)
         if readData.range == "":
             start_time = datetime.fromisoformat(readData.start_time) # For example, 5 minutes before end_time
             end_time = datetime.fromisoformat(readData.end_time)
@@ -73,12 +62,10 @@ async def read_data_dynamic(
             start_str = start_time.isoformat()
             end_str = end_time.isoformat()
 
-
             query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {start_str}, stop: {end_str}) |> filter(fn: (r) => r["_measurement"] == "{readData.measurement}")'
 
         else:
             query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{readData.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{readData.measurement}")'
-
 
         # Dynamically adding filters based on the tag_filters dictionary
         if readData.tag_filters:
@@ -96,8 +83,6 @@ async def read_data_dynamic(
                 data.append(record_dict)
 
         grouped_data = group_data(data)
-        print(grouped_data)
-        
         return {"data": grouped_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

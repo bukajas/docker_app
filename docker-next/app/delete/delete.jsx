@@ -56,7 +56,6 @@ const DeleteDataForm = () => {
       // ...(timeOption === 'minutes' ? { range: parseInt(minutes, 10) } : {}),
       // ...(timeOption === 'range' ? { start_time: `${startDate}T${startTime}`, stop_time: `${endDate}T${endTime}` } : {}),
     };
-    console.log(body)
     try {
       const response = await fetch(apiUrl, {
         method: 'DELETE',

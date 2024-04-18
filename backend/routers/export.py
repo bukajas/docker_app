@@ -1,14 +1,11 @@
-from fastapi import APIRouter
-from schemas import DeleteDataRequest
+from fastapi import APIRouter, Response, Security
 import models, auth, schemas
-from fastapi import FastAPI, HTTPException, Query, Depends, Header, status, Response, Request, Security
-from typing import Optional, List, Annotated, Dict
+from typing import Annotated
 import pytz
-from datetime import datetime, timedelta
-from dependencies import client, INFLUXDB_BUCKET, INFLUXDB_ORG, INFLUXDB_URL, INFLUXDB_TOKEN
+from datetime import datetime
+from dependencies import INFLUXDB_BUCKET, INFLUXDB_ORG, INFLUXDB_URL, INFLUXDB_TOKEN
 from influxdb_client import InfluxDBClient
 from io import StringIO
-
 
 
 router = APIRouter()
@@ -20,33 +17,28 @@ async def export_csv(
     export_request: schemas.ExportDataRequest,
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
     ): 
-    start_time = datetime.fromisoformat(export_request.start_time) # For example, 5 minutes before end_time
-    end_time = datetime.fromisoformat(export_request.end_time)
+    if export_request.interval == "seconds":
+        interval = "s"
+    elif export_request.interval == "minutes":
+        interval = "m"
+    elif export_request.interval == "hours":
+        interval = "h"
 
-    # Ensure timezone is UTC for consistency
-    start_time = start_time.replace(tzinfo=pytz.UTC)
-    end_time = end_time.replace(tzinfo=pytz.UTC)
+    if export_request.range == "":
+        start_time = datetime.fromisoformat(export_request.start_time) # For example, 5 minutes before end_time
+        end_time = datetime.fromisoformat(export_request.end_time)
+        start_time = start_time.replace(tzinfo=pytz.UTC)
+        end_time = end_time.replace(tzinfo=pytz.UTC)
+        start_str = start_time.isoformat()
+        end_str = end_time.isoformat()
 
-    start_str = start_time.isoformat()
-    end_str = end_time.isoformat()
-    
-    
-    # print(start_str,end_str)
-
-
-    
-    with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
-            # time_from = datetime.fromisoformat(fromTime) if fromTime else datetime.utcnow() - timedelta(days=1)  # Default range: last 24 hours
-            # time_to = datetime.fromisoformat(toTime) if toTime else datetime.utcnow()
-        query = f'from(bucket: "{INFLUXDB_BUCKET}") \
-            |> range(start: {start_str}, stop: {end_str}) \
-            |> filter(fn: (r) => r["_measurement"] == "{export_request.measurement}")'
-        
+        query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {start_str}, stop: {end_str}) |> filter(fn: (r) => r["_measurement"] == "{export_request.measurement}")'
+    else:
+        query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{export_request.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{export_request.measurement}")'
         for tag, value in export_request.tag_filters.items():
             query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
 
-        # print(query)
-
+    with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
 
         result = client.query_api().query_data_frame(query=query, org=INFLUXDB_ORG)
         # print(result)

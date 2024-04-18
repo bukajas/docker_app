@@ -39,7 +39,6 @@ const Register = () => {
                 email: formData.email,
                 full_name: formData.fullName // Adjust according to your schema in FastAPI
             });
-            console.log(response.data);
             setOpen(false);
         } catch (error) {
             console.error('There was an error registering the user:', error.response.data.detail);
