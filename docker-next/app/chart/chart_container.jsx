@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import ChartComponent from './chart_component'; // Replace with the correct path to your ChartComponent
 import { Button } from '@mui/material';
+import ChartComponent2 from './new_chart'; // Replace with the correct path to your ChartComponent
+
 
 function ChartContainer() {
   const [charts, setCharts] = useState([]);
@@ -21,7 +23,7 @@ function ChartContainer() {
         Create Chart
       </Button>
       {charts.map(chartId => (
-        <ChartComponent
+        <ChartComponent2
           key={chartId}
           measurementId={chartId}
           handleDelete={handleDeleteChart}

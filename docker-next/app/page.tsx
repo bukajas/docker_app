@@ -12,6 +12,7 @@ import Register from "./Registration"
 import UsersPage from "./change_roles"
 import DataExportForm2 from "./export/export_CSV";
 import { AuthProvider } from './context/AuthContext';
+import DropdownMenu from "./te"
 
 export default function Home() {
   const [activeComponent, setActiveComponent] = useState('default');
@@ -100,7 +101,7 @@ export default function Home() {
       </Drawer>
       <Container>
         {/* Conditionally render components based on activeComponent state */}
-        {activeComponent === 'default' && <Typography>Welcome to the Graph Dashboard</Typography>}
+        {activeComponent === 'default' && <DropdownMenu/>}
         {/* {activeComponent === 'charts' && renderCharts()} */}
         {activeComponent === 'edit' && <DataEditor />}
         {activeComponent === 'delete' && <DeleteDataForm />}

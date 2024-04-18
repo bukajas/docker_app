@@ -6,7 +6,8 @@ from dependencies import client, INFLUXDB_BUCKET
 from datetime import datetime
 from fastapi import APIRouter
 import pytz
-
+import Time_functions
+import json
 
 
 router = APIRouter()
@@ -47,6 +48,7 @@ async def read_data(readData: ReadData, current_user: Annotated[models.User, Sec
 async def read_data_dynamic(
     readData: schemas.DynamicReadData,
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
+    print(readData)
     try:
         if readData.interval == "seconds":
             interval = "s"
@@ -55,14 +57,11 @@ async def read_data_dynamic(
         elif readData.interval == "hours":
             interval = "h"
         if readData.range == "":
-            start_time = datetime.fromisoformat(readData.start_time) # For example, 5 minutes before end_time
-            end_time = datetime.fromisoformat(readData.end_time)
-            start_time = start_time.replace(tzinfo=pytz.UTC)
-            end_time = end_time.replace(tzinfo=pytz.UTC)
-            start_str = start_time.isoformat()
-            end_str = end_time.isoformat()
+            formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(readData.start_time)
+            formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(readData.end_time)
 
-            query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {start_str}, stop: {end_str}) |> filter(fn: (r) => r["_measurement"] == "{readData.measurement}")'
+
+            query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {formatted_timestamp_start}, stop: {formatted_timestamp_end}) |> filter(fn: (r) => r["_measurement"] == "{readData.measurement}")'
 
         else:
             query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{readData.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{readData.measurement}")'
@@ -71,7 +70,7 @@ async def read_data_dynamic(
         if readData.tag_filters:
             for tag, value in readData.tag_filters.items():
                 query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
-        # print(query)
+        print(query)
         tables = client.query_api().query(query)
         
         data = []
@@ -81,9 +80,12 @@ async def read_data_dynamic(
                 record_dict = record.values
                 record_dict['time'] = record.get_time().isoformat() if record.get_time() else None
                 data.append(record_dict)
-
         grouped_data = group_data(data)
-        return {"data": grouped_data}
+        j = {"data": grouped_data}
+        formatted_data = Time_functions.format_timestamps_utc_to_cest(j)
+        
+
+        return formatted_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

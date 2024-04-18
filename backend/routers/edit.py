@@ -45,15 +45,14 @@ async def modify_data_read(
             start_str = start_time.isoformat()
             end_str = end_time.isoformat()
 
-
             query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {start_str}, stop: {end_str}) |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
-
         else:
             query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{request_body.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
 
         if request_body.tag_filters:
             for tag, value in request_body.tag_filters.items():
                 query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
+        print(query)
         
         # Debug: print the query to check if it's correctly formatted
         # Assuming 'client' is an instance of your InfluxDB client

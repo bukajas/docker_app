@@ -19,6 +19,9 @@ import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import DateTimeForm from '../components/Time_component'
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import DynamicDropdownMenu from '../components/Selection_component'
+
+
 
 function ChartComponent({ measurementId, handleDelete }) {
   const [selectedMeasurement, setSelectedMeasurement] = useState('');
@@ -37,6 +40,10 @@ function ChartComponent({ measurementId, handleDelete }) {
   const [intervalId, setIntervalId] = useState(null); // State to store interval ID
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
+  const [selectedValues, setSelectedValues] = useState({})
+
+
 
   const chartRef = useRef(null);
   useEffect(() => {
@@ -93,7 +100,17 @@ function ChartComponent({ measurementId, handleDelete }) {
   };
 
 
+  useEffect(() => {
+    if (startDate && endDate || range) {
+      setTimeFrameSubmitted(true);
+    } else {
+      setTimeFrameSubmitted(false);
+    }
+  }, [startDate, endDate, range]); // Dependencies on time inputs
 
+
+
+  
   useEffect(() => {
     if (data) {
       // Prepare labels and datasets
@@ -287,34 +304,10 @@ function ChartComponent({ measurementId, handleDelete }) {
           )}
         </Grid>
         <Grid item xs={4}>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="measurement-select-label">Measurement</InputLabel>
-            <Select
-              labelId="measurement-select-label"
-              id="measurement-select"
-              value={selectedMeasurement}
-              label="Measurement"
-              onChange={(e) => setSelectedMeasurement(e.target.value)}
-            >
-              {Object.keys(measurements).map((measurement) => (
-                <MenuItem key={measurement} value={measurement}>
-                  {measurement}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Paper style={{ maxHeight: 400, overflow: 'auto' }} component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-              Submit
-            </Button>
 
             
-          <FormControlLabel
-          control={<Switch checked={useMinutesAgo} onChange={handleSwitchChange} />}
-          label={useMinutesAgo ? 'Minutes from Now' : 'Start and End Time'}
-        />
           {useMinutesAgo ? (
-                   <Grid container spacing={2}>
+              <Grid container spacing={2}>
                    <Grid item xs={6}>
                      <TextField
                        label="Range"
@@ -346,33 +339,32 @@ function ChartComponent({ measurementId, handleDelete }) {
                    </Grid>
                  </Grid>
       ) : (
-        <>
+          <>
           <DateTimeForm
               initialStartDate={startDate}
               initialEndDate={endDate}
               onStartDateChange={setStartDate}
               onEndDateChange={setEndDate}
             />
-            <Button onClick={handleNow} variant="contained" color="primary">
-            Now
-          </Button>
         </>
       )}
 
-            {selectedMeasurement &&
-              measurements[selectedMeasurement].map((tag, index) => (
-                <TextField
-                  key={index}
-                  label={tag}
-                  variant="outlined"
-                  fullWidth
-                  value={tagFilters[tag] || ''}
-                  onChange={(e) => handleTagFilterChange(tag, e.target.value)}
-                  sx={{ mt: 2 }}
-                />
-              ))}
+        <FormControlLabel
+        control={<Switch checked={useMinutesAgo} onChange={handleSwitchChange} />}
+        label={useMinutesAgo ? 'Minutes from Now' : 'Start and End Time'}
+      />
+
+          {timeFrameSubmitted && (
+              <>
+        <DynamicDropdownMenu/>
+      </>
+      )}
+          <Paper style={{ maxHeight: 400, overflow: 'auto' }} component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+            <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
+              Submit
+            </Button>
           </Paper>
-          
+
         </Grid>
       </Grid>
       <Button variant="contained" color="secondary" onClick={() => handleDelete(measurementId)}>
