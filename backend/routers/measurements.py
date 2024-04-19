@@ -2,6 +2,7 @@ from fastapi import Query, Security, APIRouter
 from typing import Optional, List, Annotated, Dict
 import  models, auth
 from dependencies import client,INFLUXDB_ORG,INFLUXDB_BUCKET
+import Time_functions
 
 
 router = APIRouter()
@@ -63,17 +64,25 @@ async def get_filtered_measurements_with_fields(
 
 @router.get("/filtered_measurements_with_tags", tags=["Measurements"])
 async def get_filtered_measurements_with_tags(
-    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
+    current_user: Annotated[models.User, Security(auth.get_current_active_user, scopes=["admin"])],
+    start: Optional[str] = None,
+    end: Optional[str] = None):
+
+    start_date = Time_functions.format_timestamp_cest_to_utc(start)
+    end_date = Time_functions.format_timestamp_cest_to_utc(end)
+
     query_api = client.query_api()
 
     # Base query with filters applied
-    base_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: -1d)'
+    base_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: {start_date}, stop: {end_date})'
 
     
     # Query to get list of filtered measurements
     measurements_query = base_query + ' |> keep(columns: ["_measurement"]) |> distinct(column: "_measurement")'
+
     measurements_result = query_api.query(org=INFLUXDB_ORG, query=measurements_query)
     measurements = [record.get_value() for table in measurements_result for record in table.records]
+
     
     # Dictionary to hold the filtered measurements and their tags
     measurements_with_tags: dict[str, List[str]] = {}

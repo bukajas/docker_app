@@ -20,6 +20,10 @@ import DateTimeForm from '../components/Time_component'
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import DynamicDropdownMenu from '../components/Selection_component'
+import dayjs from 'dayjs';
+import RightDrawer from '../components/Drawer_settings'
+import { constructNow } from 'date-fns';
+
 
 
 
@@ -41,35 +45,19 @@ function ChartComponent({ measurementId, handleDelete }) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
-  const [selectedValues, setSelectedValues] = useState({})
-
+  const [combinedData, setCombinedData] = useState({})
+  const [selectionsFromDrawer, setSelectionsFromDrawer] = useState({});
 
 
   const chartRef = useRef(null);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token'); // Ensure you have a token stored in localStorage
-        const response = await fetch('http://localhost:8000/filtered_measurements_with_tags', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        setMeasurements(data.measurements_with_tags);
-      } catch (error) {
-        console.error('There was an error fetching the measurements:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
+    // Assume you fetch the initial date from an API or calculate it
+    const initialStart = dayjs();
+    const initialEnd = dayjs().add(1, 'hour');
+    setStartDate(initialStart);
+    setEndDate(initialEnd);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   useEffect(() => {
     // Toggle periodic fetching when fetchEnabled state changes
@@ -82,13 +70,12 @@ function ChartComponent({ measurementId, handleDelete }) {
     }
   }, [fetchEnabled]);
 
-
   useEffect(() => {
     (handleSubmit); // Initial fetch and refetch when selectedDataTypes or hoursAgo changes
-
     // Cleanup function to clear interval when component unmounts
     return () => clearInterval(intervalId);
   }, [selectedMeasurement,range,fromTime,toTime]);
+
 
   const toggleFetchEnabled = () => {
     setFetchEnabled(prevState => !prevState); // Toggle fetchEnabled state
@@ -99,7 +86,7 @@ function ChartComponent({ measurementId, handleDelete }) {
     setTagFilters((prevFilters) => ({ ...prevFilters, [tag]: value }));
   };
 
-
+  
   useEffect(() => {
     if (startDate && endDate || range) {
       setTimeFrameSubmitted(true);
@@ -107,9 +94,6 @@ function ChartComponent({ measurementId, handleDelete }) {
       setTimeFrameSubmitted(false);
     }
   }, [startDate, endDate, range]); // Dependencies on time inputs
-
-
-
   
   useEffect(() => {
     if (data) {
@@ -159,21 +143,9 @@ function ChartComponent({ measurementId, handleDelete }) {
   }, [data, selectedMeasurement, selectedDataKey]);
   
 
-
-
-
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-
     try {
-      console.log(JSON.stringify({
-        measurement: selectedMeasurement,
-        range,
-        interval: rangeUnit,
-        tag_filters: tagFilters,
-        start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
-        end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
-      }))
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:8000/read_data_dynamic', {
         method: 'POST',
@@ -182,10 +154,7 @@ function ChartComponent({ measurementId, handleDelete }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          measurement: selectedMeasurement,
-          range,
-          interval: rangeUnit,
-          tag_filters: tagFilters,
+          data: combinedData,
           start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
           end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
         }),
@@ -193,6 +162,7 @@ function ChartComponent({ measurementId, handleDelete }) {
       if (!response.ok) {
         throw new Error(`Error: ${response.statusText}`);
       }
+
       const responseData = await response.json();
       //TODO filter and save specific values
       const sortedData = {};
@@ -202,8 +172,8 @@ function ChartComponent({ measurementId, handleDelete }) {
           return new Date(a._time) - new Date(b._time);
         });
       });
-        console.log(responseData)
         setData(sortedData);
+        
         const keys = Object.keys(responseData.data);
         setDataKeys(keys);
     } catch (error) {
@@ -212,16 +182,10 @@ function ChartComponent({ measurementId, handleDelete }) {
   };
 
 
-
   const handleDataKeyToggle = (value) => {
     setSelectedDataKey(value);
-    // if (value.length > 0) {
-    //   value.forEach((key) => {
-    //     console.log('Clicked data key:', key);
-    //     console.log('Data value:', data[key]);
-    //   });
-    // }
   };
+
 
   const footer = (tooltipItems) => {
     let sum = 0;
@@ -232,6 +196,7 @@ function ChartComponent({ measurementId, handleDelete }) {
     return 'Sum: ' + sum;
   };
   
+
   const options = {
     animation: false,
     interaction: {
@@ -271,23 +236,15 @@ function ChartComponent({ measurementId, handleDelete }) {
       },
     },
   };
-  
 
-  const handleNow = () => {
-    const now = new Date().toISOString().slice(0, 16);
-    setFromTime(now);
-    setToTime(now);
-  };
+  const handleUpdate = (newData) => {
+    setCombinedData(newData);
+    console.log("Updated Combined Data:", JSON.stringify(newData));
+};
 
-  const handleSwitchChange = (event) => {
-    setUseMinutesAgo(event.target.checked);
-    if (event.target.checked) {
-      setFromTime('');
-      setToTime('');
-    } else {
-      setRange('');
-    }
-  };
+const handleSelectionsChange = (newSelections) => {
+  setSelectionsFromDrawer(newSelections);
+};
 
 
   return (
@@ -305,64 +262,29 @@ function ChartComponent({ measurementId, handleDelete }) {
         </Grid>
         <Grid item xs={4}>
 
-            
-          {useMinutesAgo ? (
-              <Grid container spacing={2}>
-                   <Grid item xs={6}>
-                     <TextField
-                       label="Range"
-                       variant="outlined"
-                       fullWidth
-                       value={range}
-                       onChange={(e) => setRange(e.target.value)}
-                       sx={{ mt: 2 }}
-                     />
-                     <Button onClick={toggleFetchEnabled} style={{ marginLeft: '10px', background: fetchEnabled ? 'lightgreen' : 'lightgrey' }}>
-                      {fetchEnabled ? 'Disable Fetching' : 'Enable Fetching'}
-                    </Button>
-                   </Grid>
-                   <Grid item xs={6}>
-                     <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
-                       <InputLabel id="range-unit-label">Unit</InputLabel>
-                       <Select
-                         labelId="range-unit-label"
-                         id="range-unit-select"
-                         value={rangeUnit}
-                         onChange={(e) => setRangeUnit(e.target.value)}
-                         label="Unit"
-                       >
-                         <MenuItem value="seconds">Seconds</MenuItem>
-                         <MenuItem value="minutes">Minutes</MenuItem>
-                         <MenuItem value="hours">Hours</MenuItem>
-                       </Select>
-                     </FormControl>
-                   </Grid>
-                 </Grid>
-      ) : (
-          <>
           <DateTimeForm
               initialStartDate={startDate}
               initialEndDate={endDate}
               onStartDateChange={setStartDate}
               onEndDateChange={setEndDate}
             />
-        </>
-      )}
-
-        <FormControlLabel
-        control={<Switch checked={useMinutesAgo} onChange={handleSwitchChange} />}
-        label={useMinutesAgo ? 'Minutes from Now' : 'Start and End Time'}
-      />
-
           {timeFrameSubmitted && (
               <>
-        <DynamicDropdownMenu/>
+        <DynamicDropdownMenu
+          onUpdate={handleUpdate}
+          startDate={startDate}
+          endDate={endDate}
+        />
       </>
       )}
-          <Paper style={{ maxHeight: 400, overflow: 'auto' }} component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <Paper component="form" onSubmit={handleSubmit}>
             <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
               Submit
             </Button>
+            <RightDrawer
+              data={data}
+              onSelectionsChange={handleSelectionsChange}
+            />
           </Paper>
 
         </Grid>
@@ -383,6 +305,7 @@ function ChartComponent({ measurementId, handleDelete }) {
       </ToggleButtonGroup>
       <p>Start Date: {startDate ? startDate.format('YYYY-MM-DD HH:mm:ss') : 'Not set'}</p>
       <p>End Date: {endDate ? endDate.format('YYYY-MM-DD HH:mm:ss') : 'Not set'}</p>
+
   
     </Box>
   );

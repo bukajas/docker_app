@@ -7,6 +7,7 @@ from datetime import datetime
 from fastapi import APIRouter
 import pytz
 import Time_functions
+import Functions
 import json
 
 
@@ -44,34 +45,19 @@ async def read_data(readData: ReadData, current_user: Annotated[models.User, Sec
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+
+
+
 @router.post("/read_data_dynamic", tags=["Read"])
 async def read_data_dynamic(
     readData: schemas.DynamicReadData,
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
-    print(readData)
     try:
-        if readData.interval == "seconds":
-            interval = "s"
-        elif readData.interval == "minutes":
-            interval = "m"
-        elif readData.interval == "hours":
-            interval = "h"
-        if readData.range == "":
-            formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(readData.start_time)
-            formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(readData.end_time)
-
-
-            query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {formatted_timestamp_start}, stop: {formatted_timestamp_end}) |> filter(fn: (r) => r["_measurement"] == "{readData.measurement}")'
-
-        else:
-            query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{readData.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{readData.measurement}")'
-
-        # Dynamically adding filters based on the tag_filters dictionary
-        if readData.tag_filters:
-            for tag, value in readData.tag_filters.items():
-                query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
-        print(query)
-        tables = client.query_api().query(query)
+        formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(readData.start_time)
+        formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(readData.end_time)
+        flux_query = Functions.generate_flux_query(readData.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
+        tables = client.query_api().query(flux_query)
         
         data = []
         for table in tables:

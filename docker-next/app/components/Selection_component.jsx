@@ -6,46 +6,58 @@ import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Button from '@mui/material/Button';
 
-export default function DynamicDropdownMenu() {
-  const data = {
-    "measurements_with_tags": {
-      "coil_list": [
-        "host",
-        "masterID",
-        "modbusType",
-        "protocol",
-        "slaveID",
-        "unit"
-      ],
-      "vibration": [
-        "NetworkType",
-        "VendorID",
-        "host",
-        "protocol",
-        "speed",
-        "unit"
-      ]
-    }
-  };
-
+export default function DynamicDropdownMenu({ onUpdate, startDate, endDate }) {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [data, setData] = useState({ measurements_with_tags: {} });
   const [checkedCategories, setCheckedCategories] = useState({});
   const [tagValues, setTagValues] = useState({}); // This will store input values for each tag
 
+
+  
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:8000/filtered_measurements_with_tags?start=${startDate.format('YYYY-MM-DD HH:mm:ss')}&end=${endDate.format('YYYY-MM-DD HH:mm:ss')}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const result = await response.json();
+        setData(result.measurements_with_tags);
+      } catch (error) {
+        console.error('There was an error fetching the measurements:', error);
+      }
+    };
+    
+    useEffect(() => {
+      fetchData();
+    }, [startDate,endDate]);
+
+    useEffect(() => {
+      fetchData();
+    }, []);
+
   useEffect(() => {
-    const output = {};
+    // Function to combine checked categories and tag values
+    const combinedData = {};
     Object.keys(checkedCategories).forEach(category => {
-      if (checkedCategories[category]) {
-        output[category] = data.measurements_with_tags[category].reduce((acc, item) => {
-          if (tagValues[`${category}-${item}`]) {
-            acc[item] = tagValues[`${category}-${item}`];
+      if (checkedCategories[category]) {  // Check if category is checked
+        combinedData[category] = {};
+        data[category]?.forEach(item => {
+          const key = `${category}-${item}`;
+          if (tagValues[key]) {
+            combinedData[category][item] = tagValues[key];
           }
-          return acc;
-        }, {});
+        });
       }
     });
-    console.log(JSON.stringify(output, null, 2));  // Automatically printing to console
-  }, [checkedCategories, tagValues]); // Dependency array includes tagValues
+    if (onUpdate) {  // Only call onUpdate if it's a function
+      onUpdate(combinedData);}
+  }, [checkedCategories, tagValues]);  // React to changes in these states
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -82,7 +94,7 @@ export default function DynamicDropdownMenu() {
         open={Boolean(anchorEl)}
         onClose={handleClose}
       >
-        {Object.keys(data.measurements_with_tags).map((category) => (
+        {data && Object.keys(data).map((category) => (
           <MenuItem key={category}>
             <FormControlLabel
               control={<Checkbox checked={!!checkedCategories[category]} onChange={() => handleCategoryCheck(category)} />}
@@ -90,8 +102,8 @@ export default function DynamicDropdownMenu() {
             />
             {checkedCategories[category] && (
               <div style={{ marginLeft: 20 }}>
-                {data.measurements_with_tags[category].map((item) => (
-                  <div key={`${category}-${item}`} style={{ marginTop: 8 }}> {/* Ensures vertical stacking */}
+                {data[category].map((item) => (
+                  <div key={`${category}-${item}`} style={{ marginTop: 8 }}>
                     <TextField
                       fullWidth
                       label={item}

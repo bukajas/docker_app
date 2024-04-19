@@ -1,6 +1,6 @@
 # schemas.py
 from pydantic import BaseModel, validator, Field
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from datetime import datetime
 
 
@@ -119,10 +119,7 @@ class ReadDataRequest(BaseModel):
 
 
 class DynamicReadData(BaseModel):
-    measurement: str
-    range: Optional[str] = None
-    interval: Optional[str] = None
-    tag_filters: Optional[Dict[str, str]] = None
+    data:  Dict[str, Any]
     start_time: Optional[str] = None
     end_time: Optional[str] = None
 
