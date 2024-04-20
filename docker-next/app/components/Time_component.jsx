@@ -11,7 +11,7 @@ dayjs.locale('en');
 
 
 
-function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, initialEndDate }) {
+function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, initialEndDate,currentTime }) {
   const [startDate, setStartDate] = React.useState(dayjs().subtract(1, 'minute')); 
   const [endDate, setEndDate] = React.useState(dayjs());
   const [range, setRange] = React.useState(1);
@@ -58,11 +58,13 @@ function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, in
     setRangeUnit(newUnit);
     updateDates(dayjs().subtract(range, newUnit), dayjs());
   };
-
-
-
-
-
+  React.useEffect(() => {
+    if (currentTime.isAfter(endDate)) {
+      onEndDateChange(currentTime);
+      setEndDate(currentTime);
+      updateDates(dayjs().subtract(range, rangeUnit), dayjs());
+    }
+  }, [currentTime, endDate, onEndDateChange]);
 
 
   return (

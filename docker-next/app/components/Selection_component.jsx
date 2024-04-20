@@ -12,7 +12,6 @@ export default function DynamicDropdownMenu({ onUpdate, startDate, endDate }) {
   const [checkedCategories, setCheckedCategories] = useState({});
   const [tagValues, setTagValues] = useState({}); // This will store input values for each tag
 
-
   
     const fetchData = async () => {
       try {
@@ -35,6 +34,7 @@ export default function DynamicDropdownMenu({ onUpdate, startDate, endDate }) {
     
     useEffect(() => {
       fetchData();
+
     }, [startDate,endDate]);
 
     useEffect(() => {

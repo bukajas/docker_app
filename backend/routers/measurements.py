@@ -82,7 +82,7 @@ async def get_filtered_measurements_with_tags(
 
     measurements_result = query_api.query(org=INFLUXDB_ORG, query=measurements_query)
     measurements = [record.get_value() for table in measurements_result for record in table.records]
-
+    print(measurements_result)
     
     # Dictionary to hold the filtered measurements and their tags
     measurements_with_tags: dict[str, List[str]] = {}
@@ -93,5 +93,7 @@ async def get_filtered_measurements_with_tags(
         tags_result = query_api.query(org=INFLUXDB_ORG, query=tags_query)
         tags = [record.get_value() for table in tags_result for record in table.records if record.get_value().startswith('_') is False]  # Exclude system tags/fields
         measurements_with_tags[measurement] = tags
-    
+    print(measurements_query)
+    print(measurements_with_tags)
+
     return {"measurements_with_tags": measurements_with_tags}

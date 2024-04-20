@@ -12,9 +12,10 @@ import {
   Paper,
   FormControlLabel,
   Switch,
+
 } from '@mui/material';
-import { Line } from 'react-chartjs-2';
-import Chart from 'chart.js/auto';
+import { Line,Bar } from 'react-chartjs-2';
+
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import DateTimeForm from '../components/Time_component'
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -22,31 +23,32 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import DynamicDropdownMenu from '../components/Selection_component'
 import dayjs from 'dayjs';
 import RightDrawer from '../components/Drawer_settings'
-import { constructNow } from 'date-fns';
+import { constructNow, isLeapYear } from 'date-fns';
+import {stringToDictionary,aggregateDataDynamically} from '../components/Functions'
+import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/internals';
+import ExportButton from '../export/export_image';
+import { Chart, registerables } from 'chart.js';
 
 
+Chart.register(...registerables);
 
-
-function ChartComponent({ measurementId, handleDelete }) {
+function ChartComponent2({ measurementId, handleDelete }) {
   const [selectedMeasurement, setSelectedMeasurement] = useState('');
-  const [range, setRange] = useState('');
-  const [tagFilters, setTagFilters] = useState({});
   const [chartData, setChartData] = useState({});
   const [data, setData] = useState(null);
-  const [measurements, setMeasurements] = useState({});
   const [dataKeys, setDataKeys] = useState([]);  // State to hold keys from fetched data
   const [selectedDataKey, setSelectedDataKey] = useState([]);
-  const [rangeUnit, setRangeUnit] = useState('minutes'); // Default value is minutes
-  const [fromTime, setFromTime] = useState('');
-  const [toTime, setToTime] = useState('');
-  const [useMinutesAgo, setUseMinutesAgo] = useState(false);
   const [fetchEnabled, setFetchEnabled] = useState(false);
   const [intervalId, setIntervalId] = useState(null); // State to store interval ID
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
   const [combinedData, setCombinedData] = useState({})
-  const [selectionsFromDrawer, setSelectionsFromDrawer] = useState({});
+  const [selectionsFromDrawer, setSelectionsFromDrawer] = useState([]);
+  const [currentTime, setCurrentTime] = useState(dayjs());
+  const [chartType, setChartType] = useState('line');
+
+
 
 
   const chartRef = useRef(null);
@@ -60,40 +62,38 @@ function ChartComponent({ measurementId, handleDelete }) {
   }, []); // Empty dependency array ensures this runs only once on mount
 
   useEffect(() => {
-    // Toggle periodic fetching when fetchEnabled state changes
+
     if (fetchEnabled) {
-      const id = setInterval(handleSubmit, 5000); // Fetch data every 2 seconds
+      const id = setInterval(handleSubmit(), 5000); // Fetch data every 2 seconds
       setIntervalId(id);
+      return () => clearInterval(id);
     } else {
       clearInterval(intervalId); // Clear interval when fetchEnabled is false
-      setIntervalId(null);
+      // setIntervalId(null);
     }
-  }, [fetchEnabled]);
 
-  useEffect(() => {
-    (handleSubmit); // Initial fetch and refetch when selectedDataTypes or hoursAgo changes
-    // Cleanup function to clear interval when component unmounts
-    return () => clearInterval(intervalId);
-  }, [selectedMeasurement,range,fromTime,toTime]);
+  }, [fetchEnabled,currentTime]);
+
+
+  // useEffect(() => {
+  //   const timer = setInterval(() => {
+  //     setCurrentTime(dayjs());
+  //   }, 3000);
+  //   return () => clearInterval(timer);
+  // }, []);
 
 
   const toggleFetchEnabled = () => {
     setFetchEnabled(prevState => !prevState); // Toggle fetchEnabled state
   };
-
-
-  const handleTagFilterChange = (tag, value) => {
-    setTagFilters((prevFilters) => ({ ...prevFilters, [tag]: value }));
-  };
-
   
   useEffect(() => {
-    if (startDate && endDate || range) {
+    if (startDate && endDate) {
       setTimeFrameSubmitted(true);
     } else {
       setTimeFrameSubmitted(false);
     }
-  }, [startDate, endDate, range]); // Dependencies on time inputs
+  }, [startDate, endDate]); // Dependencies on time inputs
   
   useEffect(() => {
     if (data) {
@@ -104,9 +104,12 @@ function ChartComponent({ measurementId, handleDelete }) {
       // Filter data based on selected keys
       const filteredData = {};
       selectedDataKey.forEach((key) => {
-        filteredData[key] = data[key];
+        let jsonString = JSON.stringify(key);
+        let modifiedString = jsonString.slice(1, -1).replace(/: /g, ":").replace(/, /g, ",").replace(/"/g, "'").replace(/\\/g, "").replace(/,/g, ", ").replace(/:/g, ": ");
+
+        filteredData[key] = data[modifiedString];
       });
-    
+
       // Array of predefined colors
       const colors = ['rgb(75, 192, 192)', 'rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 205, 86)', 'rgb(153, 102, 255)']; // Add more colors as needed
     
@@ -114,7 +117,7 @@ function ChartComponent({ measurementId, handleDelete }) {
 
       Object.keys(filteredData).forEach((key, index) => {
         const datasetData = filteredData[key].map((d) => d._value);
-        const datasetLabel = filteredData[key][0]._measurement; // Assuming all data points in the same key have the same measurement
+        const datasetLabel = filteredData[key][index]._measurement; // Assuming all data points in the same key have the same measurement
         
         // Prepare the dataset
         const dataset = {
@@ -146,6 +149,11 @@ function ChartComponent({ measurementId, handleDelete }) {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     try {
+      const body1 = {
+        data: combinedData,
+        start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
+        end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
+      }
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:8000/read_data_dynamic', {
         method: 'POST',
@@ -153,11 +161,7 @@ function ChartComponent({ measurementId, handleDelete }) {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          data: combinedData,
-          start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
-          end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
-        }),
+        body: JSON.stringify(body1),
       });
       if (!response.ok) {
         throw new Error(`Error: ${response.statusText}`);
@@ -173,23 +177,22 @@ function ChartComponent({ measurementId, handleDelete }) {
         });
       });
         setData(sortedData);
-        
         const keys = Object.keys(responseData.data);
         setDataKeys(keys);
+        // setSelectionsFromDrawer(keys)
+        setCurrentTime(dayjs());
+
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
   };
 
-
   const handleDataKeyToggle = (value) => {
     setSelectedDataKey(value);
   };
 
-
   const footer = (tooltipItems) => {
     let sum = 0;
-  
     tooltipItems.forEach(function(tooltipItem) {
       sum += tooltipItem.parsed.y;
     });
@@ -239,12 +242,33 @@ function ChartComponent({ measurementId, handleDelete }) {
 
   const handleUpdate = (newData) => {
     setCombinedData(newData);
-    console.log("Updated Combined Data:", JSON.stringify(newData));
 };
 
+
 const handleSelectionsChange = (newSelections) => {
-  setSelectionsFromDrawer(newSelections);
+
+  const dictionary = stringToDictionary(dataKeys);
+  const topLevelKeys = Object.keys(newSelections);
+  let matchedDicts = [];
+  dictionary.forEach(dict => {
+    if (topLevelKeys.includes(dict._measurement)) {
+      let ye = dict._measurement
+      let allSubKeysPresent = true;
+      Object.entries(newSelections[ye]).forEach(([subKey,value]) =>{
+        if (!(subKey in dict) || !value.includes(dict[subKey])) {
+          allSubKeysPresent = false;
+        }
+      })
+      if (allSubKeysPresent) {
+        matchedDicts.push(JSON.stringify(dict));
+      }
+    }
+  });
+  setSelectionsFromDrawer(matchedDicts)
+  setSelectedDataKey([]);
 };
+
+
 
 
   return (
@@ -254,11 +278,18 @@ const handleSelectionsChange = (newSelections) => {
           <Typography variant="h6" component="div">
             {selectedMeasurement ? `Chart for ${selectedMeasurement}` : 'Select a Measurement'}
           </Typography>
+          <Button onClick={() => setChartType(chartType === 'line' ? 'bar' : 'line')} variant="contained" color="primary" sx={{ mt: 2, mr: 2 }}>
+            {chartType === 'line' ? 'Switch to Bar Chart' : 'Switch to Line Chart'}
+          </Button>
           {chartData.labels && (
-            <Box sx={{ mt: 2 }}>
-              <Line data={chartData} options={options} />
-            </Box>
-          )}
+          <Box sx={{ mt: 2 }}>
+            {chartType === 'line' ? (
+              <Line ref={chartRef} data={chartData} options={options} />
+            ) : (
+              <Bar ref={chartRef} data={chartData} options={options} />
+            )}
+          </Box>
+        )}
         </Grid>
         <Grid item xs={4}>
 
@@ -267,6 +298,7 @@ const handleSelectionsChange = (newSelections) => {
               initialEndDate={endDate}
               onStartDateChange={setStartDate}
               onEndDateChange={setEndDate}
+              currentTime={currentTime}
             />
           {timeFrameSubmitted && (
               <>
@@ -281,6 +313,9 @@ const handleSelectionsChange = (newSelections) => {
             <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
               Submit
             </Button>
+            <Button onClick={toggleFetchEnabled} style={{ marginLeft: '10px', background: fetchEnabled ? 'lightgreen' : 'lightgrey' }}>
+                      {fetchEnabled ? 'Disable Fetching' : 'Enable Fetching'}
+                    </Button>
             <RightDrawer
               data={data}
               onSelectionsChange={handleSelectionsChange}
@@ -292,12 +327,13 @@ const handleSelectionsChange = (newSelections) => {
       <Button variant="contained" color="secondary" onClick={() => handleDelete(measurementId)}>
         Delete This Chart
       </Button>
+      <ExportButton chartRef={chartRef} />
         <ToggleButtonGroup
           value={selectedDataKey}
           onChange={(event, value) => handleDataKeyToggle(value)}
           aria-label="data keys"
         >
-        {dataKeys.map((key, index) => (
+        {selectionsFromDrawer.map((key, index) => (
           <ToggleButton key={index} value={key} aria-label={key}>
             {key}
           </ToggleButton>
@@ -311,4 +347,4 @@ const handleSelectionsChange = (newSelections) => {
   );
 }
 
-export default ChartComponent;
+export default ChartComponent2;

@@ -7,7 +7,6 @@ function filterDataBySelections(dataKeys, selectionsFromDrawer) {
     // Filter each data item
     return dataKeys.filter(item => {
         const measurement = item._measurement;
-        console.log(measurement)
         // Check if there are selections for this measurement
         if (!selectionsFromDrawer[measurement]) {
             return false;  // No selections for this measurement type, filter it out
@@ -38,7 +37,6 @@ function RightDrawer({data, onSelectionsChange}) {
             const dictionary = stringToDictionary(keys);
             setDataKeys(aggregateDataDynamically(dictionary));
             if(dictionary){
-                console.log(filterDataBySelections(dictionary, selections))
                 setSelectedButtons(filterDataBySelections(dictionary, selections));
             }
               }

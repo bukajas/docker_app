@@ -44,7 +44,7 @@ export default function DynamicDropdownMenu() {
         }, {});
       }
     });
-    console.log(JSON.stringify(output, null, 2));  // Automatically printing to console
+    // console.log(JSON.stringify(output, null, 2));  // Automatically printing to console
   }, [checkedCategories, tagValues]); // Dependency array includes tagValues
 
   const handleClick = (event) => {
