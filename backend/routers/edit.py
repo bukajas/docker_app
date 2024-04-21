@@ -6,7 +6,8 @@ from typing import Annotated
 import  models, schemas, auth
 from dependencies import client, INFLUXDB_ORG, INFLUXDB_BUCKET
 from fastapi import APIRouter
-
+import Time_functions
+import Functions
 
 
 router = APIRouter()
@@ -31,32 +32,20 @@ async def modify_data_read(
     # If 'admin' scope is required, ensure your authentication logic handles it
 ):
     try:
-        if request_body.interval == "seconds":
-            interval = "s"
-        elif request_body.interval == "minutes":
-            interval = "m"
-        elif request_body.interval == "hours":
-            interval = "h"
-        if request_body.range == "":
-            start_time = datetime.fromisoformat(request_body.start_time) # For example, 5 minutes before end_time
-            end_time = datetime.fromisoformat(request_body.end_time)
-            start_time = start_time.replace(tzinfo=pytz.UTC)
-            end_time = end_time.replace(tzinfo=pytz.UTC)
-            start_str = start_time.isoformat()
-            end_str = end_time.isoformat()
+        formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(request_body.start_time)
+        formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(request_body.end_time)
+        flux_query = Functions.generate_flux_query(request_body.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
 
-            query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {start_str}, stop: {end_str}) |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
-        else:
-            query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{request_body.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{request_body.measurement}")'
 
-        if request_body.tag_filters:
-            for tag, value in request_body.tag_filters.items():
-                query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
-        print(query)
+        query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {formatted_timestamp_start}, stop: {formatted_timestamp_end}) |> filter(fn: (r) => r["_measurement"] == "{"coil_list"}")'
+
+        # if request_body.tag_filters:
+        #     for tag, value in request_body.tag_filters.items():
+        #         query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
         
         # Debug: print the query to check if it's correctly formatted
         # Assuming 'client' is an instance of your InfluxDB client
-        tables = client.query_api().query(query)
+        tables = client.query_api().query(flux_query)
         # Extract data values from the query result
         data = []
         for table in tables:
@@ -64,17 +53,25 @@ async def modify_data_read(
                 record_data = {
                     "time": record.get_time().isoformat(),
                     "value": record.get_value(),
-                    "field": record.get_field()
                 }
-                current_field = record.get_field()
+
+
                 for key, value in record.values.items():
                     # Skip adding the current field as a tag
-                    if key != current_field and key not in ['_start', '_stop', '_time', '_value']:
+                    if key not in ['_start', '_stop', '_time', '_value']:
                         record_data[key] = value
 
                 data.append(record_data)
-        
-        return data
+        grouped_data = {}
+
+        # Group the data
+        for item in data:
+            measurement = item['_measurement']
+            if measurement not in grouped_data:
+                grouped_data[measurement] = []
+            grouped_data[measurement].append(item)
+        print(grouped_data)
+        return grouped_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

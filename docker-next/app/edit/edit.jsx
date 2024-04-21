@@ -5,6 +5,7 @@ import {
   Box,
   Typography,
   Button,
+  ButtonGroup,
   Grid,
   TextField,
   Select,
@@ -19,10 +20,27 @@ import {
   TableRow,
   FormControlLabel,
   Switch,
-
-  Paper
+  Paper,
+  TablePagination
 } from '@mui/material';
 import { format } from 'date-fns';
+import DynamicDropdownMenu from '../components/Selection_component'
+import dayjs from 'dayjs';
+import RightDrawer from '../components/Drawer_settings'
+import DateTimeForm from '../components/Time_component'
+
+
+
+const sortDataByTime = (data) => {
+
+  // Iterate over each measurement list
+  for (const measurement in data) {
+      // Sort the measurement list by time
+      data[measurement].sort((a, b) => new Date(a.time) - new Date(b.time));
+  }
+  
+  return data;
+}
 
 const DataEditor = () => {
   const [measurements, setMeasurements] = useState({});
@@ -39,46 +57,50 @@ const DataEditor = () => {
   const [rangeUnit, setRangeUnit] = useState('minutes'); // Default value is minutes
   const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
   const [tags, setTags] = useState([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [combinedData, setCombinedData] = useState({})
+  const [selectionsFromDrawer, setSelectionsFromDrawer] = useState([]);
+  const [currentTime, setCurrentTime] = useState(dayjs());
+  const [currentMeasurement, setCurrentMeasurement] = useState(null);
 
+  const handleMeasurementChange = (measurement) => {
+    setCurrentMeasurement(measurement);
+  };
 
 
   const formatDataList = (dataList) => {
-    const excludedKeys = ['field', 'result', 'table', '_field'];
-  
-    return dataList.map(item => {
-      const newItem = {};
-  
-      Object.keys(item).forEach((key) => {
-        if (!excludedKeys.includes(key)) {
-          newItem[key] = item[key];
-        }
-      });
-  
-      return newItem;
-    });
-  };
+    // Check if dataList is an object
+    if (typeof dataList !== 'object' || Array.isArray(dataList)) {
+        console.error("Error: dataList is not an object.");
+        return {};
+    }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token'); // Ensure you have a token stored in localStorage
-        const response = await fetch('http://localhost:8000/filtered_measurements_with_tags', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+    const excludedKeys = ['field', 'result', 'table', '_field'];
+
+    const formattedData = {};
+
+    // Iterate over each measurement list in the dataList
+    for (const measurement in dataList) {
+        const measurementData = dataList[measurement];
+        // Apply the format operation to each measurement list
+        formattedData[measurement] = measurementData.map(item => {
+            const newItem = {};
+
+            // Copy over key-value pairs excluding excludedKeys
+            Object.keys(item).forEach((key) => {
+                if (!excludedKeys.includes(key)) {
+                    newItem[key] = item[key];
+                }
+            });
+            return newItem;
         });
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        setMeasurements(data.measurements_with_tags);
-      } catch (error) {
-        console.error('There was an error fetching the measurements:', error);
-      }
-    };
-    fetchData();
-  }, []);
+    }
+    return formattedData;
+};
+
+
+
 
   const handleTagFilterChange = (tag, value) => {
     setTagFilters((prevFilters) => ({ ...prevFilters, [tag]: value }));
@@ -111,12 +133,9 @@ const DataEditor = () => {
   const fetchData = async () => {
     try {
       const body = {
-        measurement: selectedMeasurement,
-        range,
-        tag_filters: tagFilters,
-        start_time: fromTime,
-        end_time: toTime,
-        interval: rangeUnit
+        data: combinedData,
+        start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
+        end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
       }
       const token = localStorage.getItem('token');
       const response = await fetch('http://127.0.0.1:8000/modify_data_read', {
@@ -132,12 +151,20 @@ const DataEditor = () => {
       }
 
       const responseData = await response.json();
-      const sortedData = responseData.sort((a, b) => {
-        return new Date(a.time) - new Date(b.time);
-      });
-      const formattedList = formatDataList(sortedData);
 
+      const sortedData = sortDataByTime(responseData);
+
+     
+      const formattedList = formatDataList(sortedData);
+      console.log(formattedList)
       setData(formattedList);
+      if (currentMeasurement){
+        const cur = currentMeasurement
+        setCurrentMeasurement(cur)
+      }
+      else{
+        setCurrentMeasurement(Object.keys(formattedList)[0])
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
@@ -190,6 +217,7 @@ const handleDelete = async (index) => {
 
 
   const handleUpdate = async (index) => {
+    console.log(index,editIndex,data[currentMeasurement],selectedMeasurement,currentMeasurement)
 
     if (editIndex === null) {
       console.error("No item selected for update");
@@ -197,7 +225,7 @@ const handleDelete = async (index) => {
     }
     // Assuming the data item has a 'time' field to identify it.
     // This part might need adjustment based on your data structure.
-    const itemToUpdate = data[editIndex];
+    const itemToUpdate = data[currentMeasurement][editIndex];
     if (!itemToUpdate) {
       console.error("Invalid item selected");
       return;
@@ -259,44 +287,50 @@ const handleDelete = async (index) => {
   };
 
   const renderTableRows = () => {
-    return data.map((item, index) => (
-      <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-        {/* Display all item's parameters dynamically */}
-        {Object.keys(item).map((key, keyIndex) => (
-          <TableCell key={keyIndex} align={keyIndex === 0 ? "left" : "right"}>
-            {editIndex === index && key === 'value' ? (
-              <TextField
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                fullWidth
-              />
+    return data.length > 0 || Object.keys(data).length !== 0 ? (
+      data[currentMeasurement].map((item, index) => (
+        <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+          {/* Display all item's parameters dynamically */}
+          {Object.keys(item).map((key, keyIndex) => (
+            <TableCell key={keyIndex} align={keyIndex === 0 ? "left" : "right"}>
+              {editIndex === index && key === 'value' ? (
+                <TextField
+                  type="text"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  fullWidth
+                />
+              ) : (
+                item[key]
+              )}
+            </TableCell>
+          ))}
+          {/* Edit and Save/Cancel Buttons */}
+          <TableCell align="right">
+            {editIndex === index ? (
+              <>
+                <Button variant="contained" onClick={() => handleUpdate(item)} sx={{ mr: 1 }}>Save</Button>
+                <Button variant="outlined" onClick={() => setEditIndex(null)}>Cancel</Button>
+              </>
             ) : (
-              item[key]
+              <Button variant="contained" onClick={() => { setEditIndex(index); setEditValue(item.value); }}>
+                Edit
+              </Button>
             )}
           </TableCell>
-        ))}
-        {/* Edit and Save/Cancel Buttons */}
-        <TableCell align="right">
-          {editIndex === index ? (
-            <>
-              <Button variant="contained" onClick={() => handleUpdate(item)} sx={{ mr: 1 }}>Save</Button>
-              <Button variant="outlined" onClick={() => setEditIndex(null)}>Cancel</Button>
-            </>
-          ) : (
-            <Button variant="contained" onClick={() => { setEditIndex(index); setEditValue(item.value); }}>
-              Edit
+          <TableCell align="right">
+            <Button onClick={() => handleDelete(item)} variant="contained" color="error">
+              Delete
             </Button>
-          )}
-        </TableCell>
-        <TableCell align="right">
-          <Button onClick={() => handleDelete(item)} variant="contained" color="error">
-            Delete
-          </Button>
-        </TableCell>
-      </TableRow>
-    ));
+          </TableCell>
+        </TableRow>
+      ))
+    ) : null;
   };
+
+  const handleUpdate2 = (newData) => {
+    setCombinedData(newData);
+};
 
 
 return (
@@ -304,140 +338,51 @@ return (
       <Typography variant="h6">Data Editor</Typography>
       <Grid container spacing={2}>
         {/* Range, Measurement Selection, and Tag Filters remain the same */}
-        <FormControlLabel
-          control={<Switch checked={useMinutesAgo} onChange={handleSwitchChange} />}
-          label={useMinutesAgo ? 'Minutes from Now' : 'Start and End Time'}
-        />
-        {useMinutesAgo ? (
-                   <Grid container spacing={2}>
-                   <Grid item xs={6}>
-                     <TextField
-                       label="Range"
-                       variant="outlined"
-                       fullWidth
-                       value={range}
-                       onChange={(e) => setRange(e.target.value)}
-                       sx={{ mt: 2 }}
-                     />
-                  
-                   </Grid>
-                   <Grid item xs={6}>
-                     <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
-                       <InputLabel id="range-unit-label">Unit</InputLabel>
-                       <Select
-                         labelId="range-unit-label"
-                         id="range-unit-select"
-                         value={rangeUnit}
-                         onChange={(e) => setRangeUnit(e.target.value)}
-                         label="Unit"
-                       >
-                         <MenuItem value="seconds">Seconds</MenuItem>
-                         <MenuItem value="minutes">Minutes</MenuItem>
-                         <MenuItem value="hours">Hours</MenuItem>
-                       </Select>
-                     </FormControl>
-                   </Grid>
-                 </Grid>
-      ) : (
-        <>
-          <TextField
-            type="datetime-local"
-            label="From Time"
-            value={fromTime}
-            onChange={e => setFromTime(e.target.value)}
-            fullWidth
-            margin="normal"
-            InputLabelProps={{
-              shrink: true,
-            }}
-            inputProps={{
-              step: 1, // To include seconds
-            }}
-          />
-          <TextField
-            type="datetime-local"
-            label="To Time"
-            value={toTime}
-            onChange={e => setToTime(e.target.value)}
-            fullWidth
-            margin="normal"
-            InputLabelProps={{
-              shrink: true,
-            }}
-            inputProps={{
-              step: 1, // To include seconds
-            }}
-          />
-            <Button onClick={handleNow} variant="contained" color="primary">
-            Now
-          </Button>
-        </>
-      )}
+        <DateTimeForm
+              initialStartDate={startDate}
+              initialEndDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              currentTime={currentTime}
+            />
         <Grid item xs={12}>
 
-        {timeFrameSubmitted && (
-        <>
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Measurement</InputLabel>
-        <Select
-          value={selectedMeasurement}
-          label="Measurement"
-          onChange={(e) => {
-            setSelectedMeasurement(e.target.value);
-            setTags({});
-          }}
-        >
-          <MenuItem value=""> {/* This MenuItem represents the empty default value */}
-            <em>Default</em> {/* This can be styled or changed to say "Select", "None", or any placeholder text */}
-          </MenuItem>
-          {Object.keys(measurements).map((measurement) => (
-            <MenuItem key={measurement} value={measurement}>
-              {measurement}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      </>
-      )}
-            {selectedMeasurement &&
-                measurements[selectedMeasurement].map((tag, index) => (
-                  <TextField
-                    key={index}
-                    label={tag}
-                    variant="outlined"
-                    fullWidth
-                    value={tagFilters[tag] || ''}
-                    onChange={(e) => handleTagFilterChange(tag, e.target.value)}
-                    sx={{ mt: 2 }}
-                  />
-              ))}
+        <DynamicDropdownMenu
+          onUpdate={handleUpdate2}
+          startDate={startDate}
+          endDate={endDate}
+        />
           <Button onClick={fetchData} variant="contained" color="primary" sx={{ mt: 2 }}>
             Fetch Data
           </Button>
         </Grid>
-
-
-        <Grid item xs={12}>
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
-              <TableHead>
-                <TableRow>
-                  {/* Generate table headers dynamically based on the first item's keys if data exists */}
-                  {data[0] && Object.keys(data[0]).map((key, index) => (
-                    <TableCell key={index} align={index === 0 ? "left" : "right"}>{key}</TableCell>
-                  ))}
-                  <TableCell align="right">Actions</TableCell>
-                  <TableCell align="right">Delete</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {renderTableRows()}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Grid>
       </Grid>
+
+      <div>
+      <ButtonGroup variant="contained" aria-label="outlined primary button group">
+        {data.length > 0 || Object.keys(data).length !== 0 && Object.keys(data).map(measurement => (
+          <Button key={measurement} onClick={() => handleMeasurementChange(measurement)}>
+            {measurement}
+          </Button>
+        ))}
+      </ButtonGroup>
+
+      <TableContainer component={Paper}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Measurement</TableCell>
+              <TableCell>Value</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {renderTableRows()}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
     </Box>
+
   );
 };
 

@@ -15,9 +15,6 @@ import {
   Grid,
 } from '@mui/material';
 import DateTimeForm from '../components/Time_component'
-import DynamicDropdownMenu from "../components/Selection_component"
-import dayjs from 'dayjs';
-
 
 const DataExportForm2 = () => {
   const [measurements, setMeasurements] = useState([]);
@@ -32,13 +29,39 @@ const DataExportForm2 = () => {
   const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
   const [range, setRange] = useState('');
   const [rangeUnit, setRangeUnit] = useState('minutes'); // Default value is minutes
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [currentTime, setCurrentTime] = useState(dayjs());
-  const [combinedData, setCombinedData] = useState({})
 
   const handleTagFilterChange = (tag, value) => {
     setTagFilters((prevFilters) => ({ ...prevFilters, [tag]: value }));
+  };
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      let computedFromTime = fromTime;
+      let computedToTime = toTime;
+      if (range) {
+        const now = new Date();
+        const from = new Date(now.getTime() - range * 60000);
+        computedFromTime = from.toISOString().slice(0, 16);
+        computedToTime = now.toISOString().slice(0, 16);
+      }
+
+      const response = await fetch(`http://localhost:8000/filtered_measurements_with_tags?start=${computedFromTime}&end=${computedToTime}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      setMeasurements(data.measurements_with_tags);
+    } catch (error) {
+      console.error('There was an error fetching the measurements:', error);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -52,11 +75,16 @@ const DataExportForm2 = () => {
           computedFromTime = from.toISOString().slice(0, 16);
           computedToTime = now.toISOString().slice(0, 16);
         }
+
+       
         const payload = {
-          data: combinedData,
-          start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
-          end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
-        }
+            measurement: selectedMeasurement,
+            tag_filters: tagFilters, 
+            start_time: fromTime,
+            range,
+            end_time: toTime,
+            interval: rangeUnit
+          };
         const token = localStorage.getItem('token');
         const response = await fetch('http://127.0.0.1:8000/export_csv', {
           method: 'POST',
@@ -80,7 +108,7 @@ const DataExportForm2 = () => {
 
   const handleTimeFrameSubmit = async (e) => {
     e.preventDefault();
-    // fetchData();
+    fetchData();
     setTimeFrameSubmitted(true);
   };
 
@@ -93,10 +121,10 @@ const DataExportForm2 = () => {
   useEffect(() => {
     if (fromTime && toTime || range) {
       setTimeFrameSubmitted(true);
-      // fetchData();
+      fetchData();
     } else {
       setTimeFrameSubmitted(false);
-      // fetchData();
+      fetchData();
     }
   }, [fromTime, toTime, range]); // Dependencies on time inputs
 
@@ -111,29 +139,74 @@ const DataExportForm2 = () => {
     }
   };
 
-  const handleUpdate = (newData) => {
-    setCombinedData(newData);
-};
-
   return (
     <form onSubmit={handleTimeFrameSubmit}>
-      <DateTimeForm
-              initialStartDate={startDate}
-              initialEndDate={endDate}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              currentTime={currentTime}
-            />
-        <DynamicDropdownMenu
-          onUpdate={handleUpdate}
-          startDate={startDate}
-          endDate={endDate}
+      <FormControl component="fieldset" margin="normal">
+        <FormLabel component="legend">Time Input Mode</FormLabel>
+        <FormControlLabel
+          control={<Switch checked={useMinutesAgo} onChange={handleSwitchChange} />}
+          label={useMinutesAgo ? 'Minutes from Now' : 'Start and End Time'}
         />
-
-
-      {/* <Button onClick={handleNow} variant="contained" color="primary">
+      </FormControl>
+      {useMinutesAgo ? (
+                   <Grid container spacing={2}>
+                   <Grid item xs={6}>
+                     <TextField
+                       label="Range"
+                       variant="outlined"
+                       fullWidth
+                       value={range}
+                       onChange={(e) => setRange(e.target.value)}
+                       sx={{ mt: 2 }}
+                     />
+                  
+                   </Grid>
+                   <Grid item xs={6}>
+                     <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
+                       <InputLabel id="range-unit-label">Unit</InputLabel>
+                       <Select
+                         labelId="range-unit-label"
+                         id="range-unit-select"
+                         value={rangeUnit}
+                         onChange={(e) => setRangeUnit(e.target.value)}
+                         label="Unit"
+                       >
+                         <MenuItem value="seconds">Seconds</MenuItem>
+                         <MenuItem value="minutes">Minutes</MenuItem>
+                         <MenuItem value="hours">Hours</MenuItem>
+                       </Select>
+                     </FormControl>
+                   </Grid>
+                 </Grid>
+      ) : (
+        <>
+          <TextField
+            type="datetime-local"
+            label="From Time"
+            value={fromTime}
+            onChange={e => setFromTime(e.target.value)}
+            fullWidth
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            type="datetime-local"
+            label="To Time"
+            value={toTime}
+            onChange={e => setToTime(e.target.value)}
+            fullWidth
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </>
+      )}
+      <Button onClick={handleNow} variant="contained" color="primary">
         Now
-      </Button> */}
+      </Button>
       {timeFrameSubmitted && (
         <>
           <FormControl fullWidth sx={{ mt: 2 }}>

@@ -11,7 +11,7 @@ def generate_flux_query(data,start,end,bucket):
         query += '    )\n    or\n'
     query = query[:-8]  # Remove the last "or" and correct indentation
     query += '))\n'
-    
+    query += '|> drop(columns: ["_result", "_field", "table"])\n'
     query += '|> yield()'
     
     return query

@@ -64,7 +64,7 @@ function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, in
       setEndDate(currentTime);
       updateDates(dayjs().subtract(range, rangeUnit), dayjs());
     }
-  }, [currentTime, endDate, onEndDateChange]);
+  }, [currentTime, onEndDateChange]);
 
 
   return (

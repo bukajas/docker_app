@@ -6,6 +6,7 @@ from datetime import datetime
 from dependencies import INFLUXDB_BUCKET, INFLUXDB_ORG, INFLUXDB_URL, INFLUXDB_TOKEN
 from influxdb_client import InfluxDBClient
 from io import StringIO
+import Time_functions,Functions
 
 
 router = APIRouter()
@@ -17,36 +18,46 @@ async def export_csv(
     export_request: schemas.ExportDataRequest,
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
     ): 
-    if export_request.interval == "seconds":
-        interval = "s"
-    elif export_request.interval == "minutes":
-        interval = "m"
-    elif export_request.interval == "hours":
-        interval = "h"
-
-    if export_request.range == "":
-        start_time = datetime.fromisoformat(export_request.start_time) # For example, 5 minutes before end_time
-        end_time = datetime.fromisoformat(export_request.end_time)
-        start_time = start_time.replace(tzinfo=pytz.UTC)
-        end_time = end_time.replace(tzinfo=pytz.UTC)
-        start_str = start_time.isoformat()
-        end_str = end_time.isoformat()
-
-        query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {start_str}, stop: {end_str}) |> filter(fn: (r) => r["_measurement"] == "{export_request.measurement}")'
-    else:
-        query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{export_request.range}{interval}) |> filter(fn: (r) => r["_measurement"] == "{export_request.measurement}")'
-        for tag, value in export_request.tag_filters.items():
-            query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
-
+    formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(export_request.start_time)
+    formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(export_request.end_time)
+    flux_query = Functions.generate_flux_query(export_request.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
+    print(flux_query)
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
 
-        result = client.query_api().query_data_frame(query=query, org=INFLUXDB_ORG)
-        # print(result)
-        if not result.empty:
-            output = StringIO()
-            result.to_csv(output, index=False)
-            output.seek(0)
-            csv_content = output.getvalue()
-            return Response(content=csv_content, media_type="text/csv")
+        results = client.query_api().query_data_frame(query=flux_query, org=INFLUXDB_ORG)
+
+        if isinstance(results, list):
+        # Check if the list of results is not empty
+            if results:
+            # Create an empty StringIO object to store CSV content
+                output = StringIO()
+
+            # Loop through each result in the list
+                for result in results:
+                # Check if the result is not empty
+                    if not result.empty:
+                    # Write the CSV content of the result to the StringIO object
+                        result.to_csv(output, index=False)
+                # Move the cursor to the beginning of the StringIO object
+                output.seek(0)
+            
+                # Get the CSV content from the StringIO object
+                csv_content = output.getvalue()
+            
+                # Close the StringIO object
+                output.close()
+
+                # Return the CSV response
+                return Response(content=csv_content, media_type="text/csv")
+            else:
+                # If the list of results is empty, return a plain text response
+                return Response(content="No data found", media_type="text/plain")
         else:
-            return Response(content="No data found", media_type="text/plain")
+            if not results.empty:
+                output = StringIO()
+                results.to_csv(output, index=False)
+                output.seek(0)
+                csv_content = output.getvalue()
+                return Response(content=csv_content, media_type="text/csv")
+            else:
+                return Response(content="No data found", media_type="text/plain")

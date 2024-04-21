@@ -5,6 +5,9 @@ from typing import  Annotated
 import pytz
 from datetime import datetime, timedelta
 from dependencies import client, INFLUXDB_BUCKET, INFLUXDB_ORG
+import Time_functions
+import Functions
+
 
 router = APIRouter()
 
@@ -20,26 +23,19 @@ async def delete_data_from_database(
     current_user: Annotated[models.User, Security(auth.get_current_active_user)],
 ):
     delete_api = client.delete_api()
-    # Ensure the datetime is timezone-aware and formatted with microseconds and UTC offset
-    if request_body.start_time and request_body.end_time:
-        start_time = datetime.fromisoformat(request_body.start_time) # For example, 5 minutes before end_time
-        end_time = datetime.fromisoformat(request_body.end_time)
-        start_time1 = start_time.replace(tzinfo=pytz.UTC)
-        end_time1 = end_time.replace(tzinfo=pytz.UTC)
-        start_str = start_time1.isoformat()
-        end_str = end_time1.isoformat()
-    elif request_body.range is not "":
-        stop = datetime.now(pytz.UTC)
-        start = stop - timedelta(minutes=int(request_body.range))
-        start_str = start.isoformat(timespec='microseconds')
-        end_str = stop.isoformat(timespec='microseconds')
-    else:
-        raise HTTPException(status_code=400, detail="Either minutes or start_time and stop_time must be provided.")
-    predicate = f'_measurement="{request_body.measurement}"'
-    for tag_key, tag_value in request_body.tags.items():
-        predicate += f' AND {tag_key}="{tag_value}"'
-    try:
-        delete_api.delete(start_str, end_str, predicate, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
-        return {"message": f"Data from measurement '{request_body.measurement}' and specified tags deleted successfully."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(request_body.start_time)
+    formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(request_body.end_time)
+    print(request_body.data.items())
+    for measurement,tags in request_body.data.items():
+        predicate = f'_measurement="{measurement}"'
+        for tag_key, tag_value in tags.items():
+            predicate += f' AND "{tag_key}"="{tag_value}"'
+            print(formatted_timestamp_start, formatted_timestamp_end)
+        try:
+            print(predicate)
+            delete_api.delete(formatted_timestamp_start, formatted_timestamp_end, predicate, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
+            print("hel")
+        
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    return {"message": f"Data from measurement '{request_body}' and specified tags deleted successfully."}
