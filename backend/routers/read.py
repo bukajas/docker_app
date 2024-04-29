@@ -58,7 +58,6 @@ async def read_data_dynamic(
         formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(readData.end_time)
         flux_query = Functions.generate_flux_query(readData.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
         tables = client.query_api().query(flux_query)
-        print(flux_query)
         data = []
         for table in tables:
             for record in table.records:

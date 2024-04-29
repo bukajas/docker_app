@@ -1,15 +1,11 @@
-from datetime import datetime
-from dateutil import parser
+list_of_lists = [['a', 'b', 'c'], ['c', 'b', 'd'], ['a', 'c', 'd']]
 
-def format_time_for_chartjs(time_string):
-    # Parse the datetime string to a datetime object
-    dt = parser.parse(time_string)
-    
-    # Format the datetime object to a string in a JavaScript friendly format
-    formatted_time = dt.strftime('%Y-%m-%dT%H:%M:%S')  # This format is generally well-supported in JavaScript
-    return formatted_time
+# Initialize an empty set to store unique first values
+first_values = set()
 
-# Example usage
-time_string = "2023-04-15T14:30:00Z"
-formatted_time = format_time_for_chartjs(time_string)
-print(formatted_time)
+# Iterate through the list and add the first element of each sublist to the set
+for sublist in list_of_lists:
+    first_values.add(sublist[0])
+
+# Print the unique first values
+print("Unique first values:", first_values)

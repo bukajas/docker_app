@@ -35,12 +35,12 @@ def read_holding_registers():
         data3 = 'vibration,VendorID=sonic,NetworkType=serial,unit=2,speed=30,protocol=ethernet/ip data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
         data4 = 'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed=30,protocol=ethernet/ip data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
         data5 = 'coil_list,slaveID=1,masterID=1,unit=1,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100)) 
-        data6 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100)) 
+        # data6 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100)) 
         data7 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100))  
         print(f"data:::::: {data1}")
 
 
-        data_list = [data1,data2,data3,data4,data5,data6]
+        data_list = [data1,data2,data3,data4,data5]
         data = "\n".join(data_list)
         try:
             requests.post(telegraf_url, data=data, auth=auth, verify=False)

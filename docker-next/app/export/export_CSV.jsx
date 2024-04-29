@@ -41,28 +41,30 @@ const DataExportForm2 = () => {
     setTagFilters((prevFilters) => ({ ...prevFilters, [tag]: value }));
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    exportData('http://127.0.0.1:8000/export_csv');
+  };
+
+  const handleAggregate = async (e) => {
+    e.preventDefault();
+    exportData('http://127.0.0.1:8000/agregate');
+  };
+
+ const exportData = async (apiUrl) => {
     try {
-        let computedFromTime = fromTime;
-        let computedToTime = toTime;
-        if (range) {
-          const now = new Date();
-          const from = new Date(now.getTime() - range * 1000);
-          computedFromTime = from.toISOString().slice(0, 16);
-          computedToTime = now.toISOString().slice(0, 16);
-        }
-        const payload = {
-          data: combinedData,
-          start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
-          end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
-        }
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://127.0.0.1:8000/export_csv', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+      const payload = {
+        data: combinedData,
+        start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
+        end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
+      }
+      const token = localStorage.getItem('token');
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
@@ -70,7 +72,7 @@ const DataExportForm2 = () => {
         throw new Error('Network response was not ok: ' + response.statusText);
       }
       const csvContent = await response.text();
-      FileDownload(csvContent, 'export.csv');
+      FileDownload(csvContent, apiUrl.endsWith('export_csv') ? 'export.csv' : 'aggregate.csv');
     } catch (error) {
       console.error('Error exporting data:', error);
     }
@@ -115,64 +117,63 @@ const DataExportForm2 = () => {
     setCombinedData(newData);
 };
 
-  return (
-    <form onSubmit={handleTimeFrameSubmit}>
-      <DateTimeForm
-              initialStartDate={startDate}
-              initialEndDate={endDate}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              currentTime={currentTime}
-            />
-        <DynamicDropdownMenu
-          onUpdate={handleUpdate}
-          startDate={startDate}
-          endDate={endDate}
-        />
+return (
+  <form onSubmit={handleTimeFrameSubmit}>
+    <DateTimeForm
+            initialStartDate={startDate}
+            initialEndDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            currentTime={currentTime}
+          />
+    <DynamicDropdownMenu
+      onUpdate={handleUpdate}
+      startDate={startDate}
+      endDate={endDate}
+    />
 
-
-      {/* <Button onClick={handleNow} variant="contained" color="primary">
-        Now
-      </Button> */}
-      {timeFrameSubmitted && (
-        <>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel id="measurement-select-label">Measurement</InputLabel>
-            <Select
-              value={selectedMeasurement}
-              label="Measurement"
-              onChange={(e) => {
-                setSelectedMeasurement(e.target.value);
-              }}
-            >
-              <MenuItem value=""> 
-                <em>Default</em> 
-              </MenuItem>
+    {timeFrameSubmitted && (
+      <>
+        <FormControl fullWidth sx={{ mt: 2 }}>
+          <InputLabel id="measurement-select-label">Measurement</InputLabel>
+          <Select
+            value={selectedMeasurement}
+            label="Measurement"
+            onChange={(e) => {
+              setSelectedMeasurement(e.target.value);
+            }}
+          >
+            <MenuItem value="">
+              <em>Default</em>
+            </MenuItem>
             {Object.keys(measurements).map((measurement) => (
               <MenuItem key={measurement} value={measurement}>
                 {measurement}
               </MenuItem>
             ))}
-            </Select>
-          </FormControl>
-          {selectedMeasurement && measurements[selectedMeasurement].map((tag, index) => (
-            <TextField
-              key={index}
-              label={tag}
-              variant="outlined"
-              fullWidth
-              value={tagFilters[tag] || ''}
-              onChange={(e) => handleTagFilterChange(tag, e.target.value)}
-              sx={{ mt: 2 }}
-            />
-          ))}
-        </>
-      )}
-       <Button onClick={handleSubmit} type="submit" variant="contained" color="primary">
-        Export Data
-      </Button>
-    </form>
-  );
+          </Select>
+        </FormControl>
+        {selectedMeasurement && measurements[selectedMeasurement].map((tag, index) => (
+          <TextField
+            key={index}
+            label={tag}
+            variant="outlined"
+            fullWidth
+            value={tagFilters[tag] || ''}
+            onChange={(e) => handleTagFilterChange(tag, e.target.value)}
+            sx={{ mt: 2 }}
+          />
+        ))}
+      </>
+    )}
+    <Button onClick={handleSubmit} type="submit" variant="contained" color="primary">
+      Export Data
+    </Button>
+    <Button onClick={handleAggregate} type="submit" variant="contained" color="secondary">
+      Aggregated Data
+    </Button>
+  </form>
+);
 };
 
 export default DataExportForm2;

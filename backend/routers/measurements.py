@@ -3,6 +3,7 @@ from typing import Optional, List, Annotated, Dict
 import  models, auth
 from dependencies import client,INFLUXDB_ORG,INFLUXDB_BUCKET
 import Time_functions
+import Functions
 
 
 router = APIRouter()
@@ -71,29 +72,31 @@ async def get_filtered_measurements_with_tags(
     start_date = Time_functions.format_timestamp_cest_to_utc(start)
     end_date = Time_functions.format_timestamp_cest_to_utc(end)
 
-    query_api = client.query_api()
+    # query_api = client.query_api()
 
-    # Base query with filters applied
-    base_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: {start_date}, stop: {end_date})'
+    # # Base query with filters applied
+    # base_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: {start_date}, stop: {end_date})'
 
     
-    # Query to get list of filtered measurements
-    measurements_query = base_query + ' |> keep(columns: ["_measurement"]) |> distinct(column: "_measurement")'
+    # # Query to get list of filtered measurements
+    # measurements_query = base_query + ' |> keep(columns: ["_measurement"]) |> distinct(column: "_measurement")'
 
-    measurements_result = query_api.query(org=INFLUXDB_ORG, query=measurements_query)
-    measurements = [record.get_value() for table in measurements_result for record in table.records]
-    print(measurements_result)
+    # measurements_result = query_api.query(org=INFLUXDB_ORG, query=measurements_query)
+    # measurements = [record.get_value() for table in measurements_result for record in table.records]
+    # print(measurements_result)
     
-    # Dictionary to hold the filtered measurements and their tags
-    measurements_with_tags: dict[str, List[str]] = {}
+    # # Dictionary to hold the filtered measurements and their tags
+    # measurements_with_tags: dict[str, List[str]] = {}
 
-    # Loop through each filtered measurement to query their tags
-    for measurement in measurements:
-        tags_query = base_query + f' |> filter(fn: (r) => r._measurement == "{measurement}") |> keys() |> keep(columns: ["_value"]) |> distinct(column: "_value")'
-        tags_result = query_api.query(org=INFLUXDB_ORG, query=tags_query)
-        tags = [record.get_value() for table in tags_result for record in table.records if record.get_value().startswith('_') is False]  # Exclude system tags/fields
-        measurements_with_tags[measurement] = tags
-    print(measurements_query)
-    print(measurements_with_tags)
+    # # Loop through each filtered measurement to query their tags
+    # for measurement in measurements:
+    #     tags_query = base_query + f' |> filter(fn: (r) => r._measurement == "{measurement}") |> keys() |> keep(columns: ["_value"]) |> distinct(column: "_value")'
+    #     tags_result = query_api.query(org=INFLUXDB_ORG, query=tags_query)
+    #     tags = [record.get_value() for table in tags_result for record in table.records if record.get_value().startswith('_') is False]  # Exclude system tags/fields
+    #     measurements_with_tags[measurement] = tags
+
+    measurements_with_tags = Functions.get_measurements_with_tags(start_date,end_date)
+
+
 
     return {"measurements_with_tags": measurements_with_tags}

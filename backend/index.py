@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import delete, export, edit, authentication, users, measurements, read, write
-
+from routers import delete, export, edit, authentication, users, measurements, read, write,agregate
+import Agregate
 
 
 # 1. user can access data only after signing in - partialy done
@@ -14,7 +14,7 @@ from routers import delete, export, edit, authentication, users, measurements, r
 # TODO add users for administration + add administration
 # TODO manage to stop and resume logging, > how if modbus inicates the comunication
 
-
+ 
 # Replace with your InfluxDB details
 INFLUXDB_URL = "http://docker-influxdb:8086"
 INFLUXDB_ORG = "VUT"
@@ -29,6 +29,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+
+app.include_router(agregate.router)
+app.include_router(Agregate.router)
 app.include_router(delete.router)
 app.include_router(export.router)
 app.include_router(edit.router)
