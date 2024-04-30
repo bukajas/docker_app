@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import axios from 'axios';
 import '../styles.css';
-
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const Register = () => {
     const [open, setOpen] = useState(false);
@@ -46,8 +46,22 @@ const Register = () => {
         }
     };
 
+    const theme = createTheme({
+        palette: {
+          primary: {
+            main: '#000000', // Example primary color
+          },
+          secondary: {
+            main: '#dc3545', // Example secondary color
+          },
+        },
+      });
+
     return (
         <div>
+            <ThemeProvider theme={theme}>
+
+            
             <Button className="manage-users-button" variant="outlined" onClick={handleClickOpen}>
                 Register
             </Button>
@@ -103,6 +117,7 @@ const Register = () => {
                     </DialogActions>
                 </form>
             </Dialog>
+            </ThemeProvider>
         </div>
     );
 }

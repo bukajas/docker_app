@@ -2,6 +2,8 @@ import { useEffect, useState, useContext } from 'react';
 import { Button, Dialog, DialogContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Select, MenuItem, Paper } from '@mui/material';
 import { AuthContext } from './context/AuthContext';  // Make sure the path matches where the AuthContext is defined
 import '../styles.css';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
 
 const UsersPage = () => {
     const [users, setUsers] = useState([]);
@@ -69,8 +71,20 @@ const UsersPage = () => {
         return <div></div>;
     }
 
+    const theme = createTheme({
+        palette: {
+          primary: {
+            main: '#000000', // Example primary color
+          },
+          secondary: {
+            main: '#dc3545', // Example secondary color
+          },
+        },
+      });
+
     return (
         <div>
+            <ThemeProvider theme={theme}>
             <Button
                 className="manage-users-button"
                 variant="outlined"
@@ -115,6 +129,7 @@ const UsersPage = () => {
                     </TableContainer>
                 </DialogContent>
             </Dialog>
+            </ThemeProvider>
         </div>
     );
 };

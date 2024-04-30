@@ -1,5 +1,11 @@
-.manage-users-button {
+.manage-users-button{
     color: red; /* This sets the text color */
     background-color: #000000; /* This sets the background color */
     border-color: #000000; /* This sets the border color */
 }
+
+
+.red-button {
+    background-color: red;
+    color: white;
+  }

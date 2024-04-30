@@ -328,17 +328,18 @@ const handleSelectionsChange = (newSelections) => {
         Delete This Chart
       </Button>
       <ExportButton chartRef={chartRef} />
-        <ToggleButtonGroup
-          value={selectedDataKey}
-          onChange={(event, value) => handleDataKeyToggle(value)}
-          aria-label="data keys"
-        >
-        {selectionsFromDrawer.map((key, index) => (
-          <ToggleButton key={index} value={key} aria-label={key}>
-            {key}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+      <ToggleButtonGroup
+  orientation="vertical"
+  value={selectedDataKey}
+  onChange={(event, value) => handleDataKeyToggle(value)}
+  aria-label="data keys"
+>
+  {dataKeys.map((key, index) => (
+    <ToggleButton key={index} value={key} aria-label={key}>
+      {key}
+    </ToggleButton>
+  ))}
+</ToggleButtonGroup>
       <p>Start Date: {startDate ? startDate.format('YYYY-MM-DD HH:mm:ss') : 'Not set'}</p>
       <p>End Date: {endDate ? endDate.format('YYYY-MM-DD HH:mm:ss') : 'Not set'}</p>
 

@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import delete, export, edit, authentication, users, measurements, read, write,agregate
+from routers import delete, export, edit, authentication, users, measurements, read, write,agregate,retencion
 import Agregate
+
 
 
 # 1. user can access data only after signing in - partialy done
@@ -30,7 +31,7 @@ app.add_middleware(
 )
 
 
-
+app.include_router(retencion.router)
 app.include_router(agregate.router)
 app.include_router(Agregate.router)
 app.include_router(delete.router)

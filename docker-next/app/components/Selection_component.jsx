@@ -1,51 +1,45 @@
 import { useState, useEffect } from 'react';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Button from '@mui/material/Button';
+import Collapse from '@mui/material/Collapse';
 
-export default function DynamicDropdownMenu({ onUpdate, startDate, endDate }) {
-  const [anchorEl, setAnchorEl] = useState(null);
+export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate }) {
   const [data, setData] = useState({ measurements_with_tags: {} });
   const [checkedCategories, setCheckedCategories] = useState({});
-  const [tagValues, setTagValues] = useState({}); // This will store input values for each tag
+  const [tagValues, setTagValues] = useState({});
+  const [selectedTab, setSelectedTab] = useState(0);
 
-  
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:8000/filtered_measurements_with_tags?start=${startDate.format('YYYY-MM-DD HH:mm:ss')}&end=${endDate.format('YYYY-MM-DD HH:mm:ss')}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const result = await response.json();
-        setData(result.measurements_with_tags);
-      } catch (error) {
-        console.error('There was an error fetching the measurements:', error);
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/filtered_measurements_with_tags?start=${startDate.format('YYYY-MM-DD HH:mm:ss')}&end=${endDate.format('YYYY-MM-DD HH:mm:ss')}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
       }
-    };
-    
-    useEffect(() => {
-      fetchData();
-
-    }, [startDate,endDate]);
-
-    useEffect(() => {
-      fetchData();
-    }, []);
+      const result = await response.json();
+      setData(result.measurements_with_tags);
+    } catch (error) {
+      console.error('There was an error fetching the measurements:', error);
+    }
+  };
 
   useEffect(() => {
-    // Function to combine checked categories and tag values
+    fetchData();
+  }, [startDate, endDate]);
+
+  useEffect(() => {
     const combinedData = {};
     Object.keys(checkedCategories).forEach(category => {
-      if (checkedCategories[category]) {  // Check if category is checked
+      if (checkedCategories[category]) {
         combinedData[category] = {};
         data[category]?.forEach(item => {
           const key = `${category}-${item}`;
@@ -55,16 +49,11 @@ export default function DynamicDropdownMenu({ onUpdate, startDate, endDate }) {
         });
       }
     });
-    if (onUpdate) {  // Only call onUpdate if it's a function
-      onUpdate(combinedData);}
-  }, [checkedCategories, tagValues]);  // React to changes in these states
+    onUpdate && onUpdate(combinedData);
+  }, [checkedCategories, tagValues]);
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
   };
 
   const handleCategoryCheck = (category) => {
@@ -83,41 +72,44 @@ export default function DynamicDropdownMenu({ onUpdate, startDate, endDate }) {
   };
 
   return (
-    <div>
-      <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick}>
-        Open Menu
-      </Button>
-      <Menu
-        id="simple-menu"
-        anchorEl={anchorEl}
-        keepMounted
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
+    <Box>
+      <Tabs
+        value={selectedTab}
+        onChange={handleTabChange}
+        aria-label="data tabs"
+        variant="scrollable"
+        scrollButtons="auto"
       >
-        {data && Object.keys(data).map((category) => (
-          <MenuItem key={category}>
+        {data && Object.keys(data).map((category, index) => (
+          <Tab label={category} id={`tab-${index}`} key={category} />
+        ))}
+        <Tab label="Collapse All" id="collapse-tab" />  {/* Static tab for collapsing */}
+      </Tabs>
+      {data && Object.keys(data).map((category, index) => (
+        <Collapse in={selectedTab === index} timeout="auto" unmountOnExit key={category}>
+          <Box margin={2}>
             <FormControlLabel
               control={<Checkbox checked={!!checkedCategories[category]} onChange={() => handleCategoryCheck(category)} />}
-              label={category}
+              label={`Toggle ${category}`}
             />
             {checkedCategories[category] && (
               <div style={{ marginLeft: 20 }}>
                 {data[category].map((item) => (
-                  <div key={`${category}-${item}`} style={{ marginTop: 8 }}>
-                    <TextField
-                      fullWidth
-                      label={item}
-                      value={tagValues[`${category}-${item}`] || ''}
-                      onChange={(e) => handleInputChange(category, item, e.target.value)}
-                      variant="outlined"
-                    />
-                  </div>
+                  <TextField
+                    fullWidth
+                    key={`${category}-${item}`}
+                    label={item}
+                    value={tagValues[`${category}-${item}`] || ''}
+                    onChange={(e) => handleInputChange(category, item, e.target.value)}
+                    variant="outlined"
+                    margin="dense"
+                  />
                 ))}
               </div>
             )}
-          </MenuItem>
-        ))}
-      </Menu>
-    </div>
+          </Box>
+        </Collapse>
+      ))}
+    </Box>
   );
 }

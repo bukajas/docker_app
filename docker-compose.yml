@@ -17,6 +17,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: docker-fastapi
+    depends_on:
+      - docker-mysql
     ports:
       - '8000:8000'
     volumes:
