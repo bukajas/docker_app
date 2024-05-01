@@ -14,6 +14,7 @@ import DataExportForm2 from "./export/export_CSV";
 import { AuthProvider } from './context/AuthContext';
 import DropdownMenu from "./te"
 import RetentionPolicyPopup from './retencion/Retencion'
+import DrawerItems from './components/List_page'; // Adjust the path according to your project structure
 
 export default function Home() {
   const [activeComponent, setActiveComponent] = useState('default');
@@ -89,27 +90,25 @@ export default function Home() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Graph Dashboard
           </Typography>
-        <Login />
-        <Register />
-        <UsersPage />
-        <RetentionPolicyPopup />
+          <Login />
+          <Register />
+          <UsersPage />
+          <RetentionPolicyPopup />
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
-        anchor="left"
-      >
-        {drawerItems}
+      <Drawer variant="permanent" anchor="left">
+        <DrawerItems setActiveComponent={setActiveComponent} />
       </Drawer>
       <Container>
         {/* Conditionally render components based on activeComponent state */}
+{/* Conditionally render components based on activeComponent state */}
         {activeComponent === 'default' && <DropdownMenu/>}
         {/* {activeComponent === 'charts' && renderCharts()} */}
         {activeComponent === 'edit' && <DataEditor />}
         {activeComponent === 'delete' && <DeleteDataForm />}
         {activeComponent === 'export' && <DataExportForm2 />}
         {activeComponent === 'Graphs' && <ChartContainer />}
-
+        {/* Add other conditional components as needed */}
       </Container>
       </AuthProvider>
     </div>

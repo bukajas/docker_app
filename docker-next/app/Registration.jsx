@@ -1,10 +1,12 @@
 "use client";
 // pages/register.js
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import axios from 'axios';
 import '../styles.css';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { AuthContext } from './context/AuthContext';  // Make sure the path matches where the AuthContext is defined
+
 
 const Register = () => {
     const [open, setOpen] = useState(false);
@@ -14,6 +16,8 @@ const Register = () => {
         password: '',
         email: ''
     });
+    const { scopes,isAuthenticated } = useContext(AuthContext); // Use useContext to access the current authentication context
+
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -57,14 +61,35 @@ const Register = () => {
         },
       });
 
+
+    const hasAdminScope = scopes.includes('admin');
+    const hasEmployeeScope = scopes.includes('employee');
+    const hasBasicScope = scopes.includes('basic');
+
+
+    // {isAuthenticated && hasAdminScope && (
+    //     <div>This is some admin-only content.</div>
+    // )}
+    // {isAuthenticated && hasEmployeeScope && (
+    //     <div>This is some employee-only content.</div>
+    // )}
+    // if (!hasAdminScope && !hasEmployeeScope && !hasBasicScope) {
+    //     return (
+    //     <ThemeProvider theme={theme}>
+    //     <Button className="manage-users-button" variant="outlined" onClick={handleClickOpen}>Register</Button>
+    //     </ThemeProvider>
+    // )
+    // }
+
     return (
         <div>
             <ThemeProvider theme={theme}>
 
-            
+            {(!hasAdminScope && !hasEmployeeScope && !hasBasicScope) && (
             <Button className="manage-users-button" variant="outlined" onClick={handleClickOpen}>
                 Register
             </Button>
+            )}
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>Register</DialogTitle>
                 <form onSubmit={handleSubmit}>

@@ -7,18 +7,20 @@ import  models, schemas, auth
 router = APIRouter()
 
 
-@router.get("/users", response_model=List[schemas.UserDisplay], tags=["Users"])
-def read_users(db: Session = Depends(auth.get_db)):
+@router.get("/users",  tags=["Users"])
+def read_users(db: Session = Depends(auth.get_db), response_model=List[schemas.UserDisplay]):
     users = db.query(models.UserList).all()
     return users
 
 
-@router.patch("/users/{user_id}/role", response_model=schemas.UserInDB, tags=["Users"])
+@router.patch("/users/{user_id}/role",  tags=["Users"])
 def update_user_role(
     user_id: int, 
     role_update: schemas.RoleUpdate,  # Use the RoleUpdate model for input validation
     current_user: Annotated[models.User, Security(auth.get_current_active_user, scopes=["admin"])], 
-    db: Session = Depends(auth.get_db)
+    db: Session = Depends(auth.get_db),
+    response_model=schemas.UserInDB
+
 ):
      # Fetch the user to update from the DB
     user_to_update = db.query(models.User).filter(models.User.id == user_id).first()

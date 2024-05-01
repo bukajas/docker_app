@@ -47,11 +47,22 @@ function ChartComponent2({ measurementId, handleDelete }) {
   const [selectionsFromDrawer, setSelectionsFromDrawer] = useState([]);
   const [currentTime, setCurrentTime] = useState(dayjs());
   const [chartType, setChartType] = useState('line');
-
+  const [itemsToDisplay, setItemsToDisplay] = useState([]);
 
 
 
   const chartRef = useRef(null);
+
+
+  useEffect(() => {
+    // Update itemsToDisplay based on whether selectionFromDrawer is empty
+    if (selectionsFromDrawer.length > 0) {
+      setItemsToDisplay(selectionsFromDrawer);
+    } else {
+      setItemsToDisplay(dataKeys);
+    }
+  }, [dataKeys, selectionsFromDrawer]); // Dependencies ensure this effect runs when either prop changes
+
 
   useEffect(() => {
     // Assume you fetch the initial date from an API or calculate it
@@ -188,6 +199,7 @@ function ChartComponent2({ measurementId, handleDelete }) {
   };
 
   const handleDataKeyToggle = (value) => {
+    console.log("datakeytoggle")
     setSelectedDataKey(value);
   };
 
@@ -264,6 +276,8 @@ const handleSelectionsChange = (newSelections) => {
       }
     }
   });
+  console.log(matchedDicts)
+  console.log(dataKeys)
   setSelectionsFromDrawer(matchedDicts)
   setSelectedDataKey([]);
 };
@@ -329,16 +343,16 @@ const handleSelectionsChange = (newSelections) => {
       </Button>
       <ExportButton chartRef={chartRef} />
       <ToggleButtonGroup
-  orientation="vertical"
-  value={selectedDataKey}
-  onChange={(event, value) => handleDataKeyToggle(value)}
-  aria-label="data keys"
->
-  {dataKeys.map((key, index) => (
-    <ToggleButton key={index} value={key} aria-label={key}>
-      {key}
-    </ToggleButton>
-  ))}
+        orientation="vertical"
+        value={selectedDataKey}
+        onChange={(event, value) => handleDataKeyToggle(value)}
+        aria-label="data keys"
+      >
+  {itemsToDisplay.map((key, index) => (
+        <ToggleButton key={index} value={key} aria-label={key}>
+          {key}
+        </ToggleButton>
+      ))}
 </ToggleButtonGroup>
       <p>Start Date: {startDate ? startDate.format('YYYY-MM-DD HH:mm:ss') : 'Not set'}</p>
       <p>End Date: {endDate ? endDate.format('YYYY-MM-DD HH:mm:ss') : 'Not set'}</p>

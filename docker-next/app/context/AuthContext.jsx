@@ -5,9 +5,9 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [authState, setAuthState] = useState({
-        token: localStorage.getItem('token') || null,
+        token: null,
         scopes: [],
-        username: localStorage.getItem('username') || '',
+        username:  '',
         isAuthenticated: false
     });
 
