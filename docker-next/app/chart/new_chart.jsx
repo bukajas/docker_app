@@ -30,6 +30,17 @@ import ExportButton from '../export/export_image';
 import { Chart, registerables } from 'chart.js';
 
 
+
+function convertDictToString(dict) {
+  const keysToExclude = ['date', 'day', '_start', '_stop', '_time',"result","table","time","_value"];
+
+  // Convert dictionary to a string but exclude certain keys
+  return Object.entries(dict)
+    .filter(([key, _]) => !keysToExclude.includes(key))  // Exclude specified keys
+    .map(([key, value]) => `${key}:${value}`)           // Format each key-value pair
+    .join(',');                                         // Join pairs with commas
+}
+
 Chart.register(...registerables);
 
 function ChartComponent2({ measurementId, handleDelete }) {
@@ -128,11 +139,12 @@ function ChartComponent2({ measurementId, handleDelete }) {
 
       Object.keys(filteredData).forEach((key, index) => {
         const datasetData = filteredData[key].map((d) => d._value);
-        const datasetLabel = filteredData[key][index]._measurement; // Assuming all data points in the same key have the same measurement
-        
+        const datasetLabel = filteredData[key][index]; // Assuming all data points in the same key have the same measurement
+        const resultString = convertDictToString(filteredData[key][index]);
+        console.log(resultString)
         // Prepare the dataset
         const dataset = {
-          label: datasetLabel,
+          label: resultString,
           data: datasetData,
           fill: false,
           borderColor: colors[index % colors.length], // Use modulo to loop through the colors array
@@ -159,12 +171,14 @@ function ChartComponent2({ measurementId, handleDelete }) {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    
     try {
       const body1 = {
         data: combinedData,
         start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
         end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
       }
+      console.log(body1)
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:8000/read_data_dynamic', {
         method: 'POST',
@@ -252,6 +266,7 @@ function ChartComponent2({ measurementId, handleDelete }) {
     },
   };
 
+
   const handleUpdate = (newData) => {
     setCombinedData(newData);
 };
@@ -285,17 +300,18 @@ const handleSelectionsChange = (newSelections) => {
 
 
 
-  return (
-    <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 2, mb: 2 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={8}>
-          <Typography variant="h6" component="div">
-            {selectedMeasurement ? `Chart for ${selectedMeasurement}` : 'Select a Measurement'}
-          </Typography>
-          <Button onClick={() => setChartType(chartType === 'line' ? 'bar' : 'line')} variant="contained" color="primary" sx={{ mt: 2, mr: 2 }}>
-            {chartType === 'line' ? 'Switch to Bar Chart' : 'Switch to Line Chart'}
-          </Button>
-          {chartData.labels && (
+return (
+  <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 2, mb: 2 }}>
+    <Grid container spacing={2}>
+      {/* Full-width chart at the top */}
+      <Grid item xs={12}>
+        <Typography variant="h6" component="div">
+          {selectedMeasurement ? `Chart for ${selectedMeasurement}` : 'Select a Measurement'}
+        </Typography>
+        <Button onClick={() => setChartType(chartType === 'line' ? 'bar' : 'line')} variant="contained" color="primary" sx={{ mt: 2, mr: 2 }}>
+          {chartType === 'line' ? 'Switch to Bar Chart' : 'Switch to Line Chart'}
+        </Button>
+        {chartData.labels && (
           <Box sx={{ mt: 2 }}>
             {chartType === 'line' ? (
               <Line ref={chartRef} data={chartData} options={options} />
@@ -304,62 +320,59 @@ const handleSelectionsChange = (newSelections) => {
             )}
           </Box>
         )}
-        </Grid>
-        <Grid item xs={4}>
-
-          <DateTimeForm
-              initialStartDate={startDate}
-              initialEndDate={endDate}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              currentTime={currentTime}
-            />
-          {timeFrameSubmitted && (
-              <>
+      </Grid>
+      {/* Left column for DateTimeForm, toggle buttons, etc. */}
+      <Grid item xs={12} md={8}>
+        <DateTimeForm
+          initialStartDate={startDate}
+          initialEndDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          currentTime={currentTime}
+        />
+        <Button onClick={() => setChartType(chartType === 'line' ? 'bar' : 'line')} variant="contained" color="primary" sx={{ mt: 2 }}>
+          {chartType === 'line' ? 'Switch to Bar Chart' : 'Switch to Line Chart'}
+        </Button>
+        <Button onClick={toggleFetchEnabled} style={{ marginLeft: '10px', background: fetchEnabled ? 'lightgreen' : 'lightgrey' }}>
+          {fetchEnabled ? 'Disable Fetching' : 'Enable Fetching'}
+        </Button>
+        <Button variant="contained" color="secondary" sx={{ mt: 2 }} onClick={() => handleDelete(measurementId)}>
+          Delete This Chart
+        </Button>
+        <ExportButton chartRef={chartRef} />
+      </Grid>
+      {/* Right column for DynamicDropdownMenu, itemsToDisplay, and submit button */}
+      <Grid item xs={12} md={4}>
+      <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleSubmit}>
+          Submit
+        </Button>
         <DynamicDropdownMenu
           onUpdate={handleUpdate}
           startDate={startDate}
           endDate={endDate}
         />
-      </>
-      )}
-          <Paper component="form" onSubmit={handleSubmit}>
-            <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-              Submit
-            </Button>
-            <Button onClick={toggleFetchEnabled} style={{ marginLeft: '10px', background: fetchEnabled ? 'lightgreen' : 'lightgrey' }}>
-                      {fetchEnabled ? 'Disable Fetching' : 'Enable Fetching'}
-                    </Button>
-            <RightDrawer
+        <RightDrawer
               data={data}
               onSelectionsChange={handleSelectionsChange}
             />
-          </Paper>
+        <ToggleButtonGroup
+          orientation="vertical"
+          value={selectedDataKey}
+          onChange={(event, value) => handleDataKeyToggle(value)}
+          aria-label="data keys"
+          sx={{ mt: 2 }}
+        >
+          {itemsToDisplay.map((key, index) => (
+            <ToggleButton key={index} value={key} aria-label={key}>
+              {key}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
 
-        </Grid>
       </Grid>
-      <Button variant="contained" color="secondary" onClick={() => handleDelete(measurementId)}>
-        Delete This Chart
-      </Button>
-      <ExportButton chartRef={chartRef} />
-      <ToggleButtonGroup
-        orientation="vertical"
-        value={selectedDataKey}
-        onChange={(event, value) => handleDataKeyToggle(value)}
-        aria-label="data keys"
-      >
-  {itemsToDisplay.map((key, index) => (
-        <ToggleButton key={index} value={key} aria-label={key}>
-          {key}
-        </ToggleButton>
-      ))}
-</ToggleButtonGroup>
-      <p>Start Date: {startDate ? startDate.format('YYYY-MM-DD HH:mm:ss') : 'Not set'}</p>
-      <p>End Date: {endDate ? endDate.format('YYYY-MM-DD HH:mm:ss') : 'Not set'}</p>
-
-  
-    </Box>
-  );
+    </Grid>
+  </Box>
+);
 }
 
 export default ChartComponent2;

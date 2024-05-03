@@ -1,6 +1,6 @@
 .manage-users-button{
-    color: red; /* This sets the text color */
-    background-color: #000000; /* This sets the background color */
+    color: white; /* This sets the text color */
+    background-color: #6d6d6d; /* This sets the background color */
     border-color: #000000; /* This sets the border color */
 }
 
@@ -8,4 +8,89 @@
 .red-button {
     background-color: red;
     color: white;
+  }
+
+.custom-button {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    border-radius: 4px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    background-color: #2196f3; /* Your desired background color */
+    color: #ffffff; /* Your desired text color */
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+.custom-button:hover {
+    background-color: #1976d2; /* Your desired hover background color */
+    color: #ffffff; /* Your desired hover text color */
+  }
+
+  
+.custom-button1 {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    border-radius: 8px;
+    text-transform: uppercase;
+    border: 2px solid #2196f3; /* Your desired border color */
+    padding: 12px 24px;
+    background-color: transparent;
+    color: #2196f3; /* Your desired text color */
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .custom-button1:hover {
+    background-color: #2196f3; /* Your desired hover background color */
+    color: #ffffff; /* Your desired hover text color */
+    border-color: #1976d2; /* Your desired hover border color */
+  }
+  
+  .export-button {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.75;
+    border-radius: 8px;
+    text-transform: uppercase;
+    border: 2px solid #4caf50; /* Your desired border color */
+    padding: 12px 24px;
+    background-color: transparent;
+    color: #4caf50; /* Your desired text color */
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .export-button:hover {
+    background-color: #4caf50; /* Your desired hover background color */
+    color: #ffffff; /* Your desired hover text color */
+    border-color: #388e3c; /* Your desired hover border color */
+  }
+  
+  /* Export Aggregated Data Button Style */
+  .export-aggregated-button {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.75;
+    border-radius: 8px;
+    text-transform: uppercase;
+    border: 2px solid #ff9800; /* Your desired border color */
+    padding: 12px 24px;
+    background-color: transparent;
+    color: #ff9800; /* Your desired text color */
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .export-aggregated-button:hover {
+    background-color: #ff9800; /* Your desired hover background color */
+    color: #ffffff; /* Your desired hover text color */
+    border-color: #f57c00; /* Your desired hover border color */
   }

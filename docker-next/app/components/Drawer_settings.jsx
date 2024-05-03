@@ -1,7 +1,8 @@
 import React, { useState ,useEffect} from 'react';
-import { Drawer,Box,Tabs,Tab, Checkbox, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Typography, Button } from '@mui/material';
+import { Drawer,Box,Tabs,Tab, Checkbox, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Typography, Button,Paper } from '@mui/material';
 import {stringToDictionary,aggregateDataDynamically} from '../components/Functions'
-
+import DynamicDropdownMenu from '../components/Selection_component'
+import DateTimeForm from '../components/Time_component'
 
 function filterDataBySelections(dataKeys, selectionsFromDrawer) {
     // Filter each data item
@@ -21,18 +22,20 @@ function filterDataBySelections(dataKeys, selectionsFromDrawer) {
     });
 }
 
-
 function RightDrawer({data, onSelectionsChange}) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [selectedTab, setSelectedTab] = useState(0);
-    const [values,setValues] = useState({})
-    const [dataKeys,setDataKeys] = useState(null)
-    const [selectedButtons, setSelectedButtons] = useState({});
-    const [selections, setSelections] = useState({});
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [values,setValues] = useState({})
+  const [dataKeys,setDataKeys] = useState(null)
+  const [selectedButtons, setSelectedButtons] = useState({});
+  const [selections, setSelections] = useState({});
+
+
+
 
     useEffect(() => {
         if(data){
-            setValues(data);
+
             const keys = Object.keys(data);
             const dictionary = stringToDictionary(keys);
             setDataKeys(aggregateDataDynamically(dictionary));
@@ -48,11 +51,16 @@ function RightDrawer({data, onSelectionsChange}) {
 
 
     const toggleDrawer = (open) => (event) => {
-        if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
-            return;
-        }
-        setIsOpen(open);
-    };
+      // Prevent drawer toggle when keyboard events occur (like typing in inputs)
+      if (event && event.type === 'keydown') {
+          // You might want to allow toggling the drawer with specific keys, e.g., escape
+          if (event.key === 'Escape') {
+              setIsOpen(false);
+          }
+          return; // Prevent other key events from affecting the drawer state
+      }
+      setIsOpen(open);
+  };
 
     const handleTabChange = (event, newValue) => {
         setSelectedTab(newValue);
@@ -78,7 +86,8 @@ function RightDrawer({data, onSelectionsChange}) {
     const tabContent = (index) => {
         switch (index) {
             case 0:
-                return <Typography>This is the Selected content.</Typography>;
+                return (<div>
+                </div>)
             case 1:
                 return (
                     <div>
@@ -135,7 +144,7 @@ function RightDrawer({data, onSelectionsChange}) {
             <Drawer
                 anchor='right'
                 open={isOpen}
-                onClose={toggleDrawer(false)}
+                onClose={() => setIsOpen(false)}
                 sx={{ width: '30%', flexShrink: 0 }}
                 PaperProps={{ style: { width: '30%' } }}
             >

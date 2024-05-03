@@ -14,7 +14,7 @@ log.setLevel(logging.DEBUG)
 client = ModbusTcpClient('localhost', port=5020)
 telegraf_url = 'https://localhost:8186/telegraf'  # URL to send data to Telegraf
 auth = HTTPBasicAuth('test', 'test')  # Basic authentication
-ca_bundle = '/home/asszonyij//ca.crt'
+ca_bundle = '/etc/ssl/telegraf.cert'
 
 # ! problem with timestamps
 def read_holding_registers():
@@ -43,7 +43,7 @@ def read_holding_registers():
         data_list = [data1,data2,data3,data4,data5]
         data = "\n".join(data_list)
         try:
-            requests.post(telegraf_url, data=data, auth=auth, verify=False)
+            requests.post(telegraf_url, data=data, auth=auth, verify=ca_bundle)
             log.info("Data sent to Telegraf")
         except Exception as e:
             log.error(f"Error sending data to Telegraf: {e}")

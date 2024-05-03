@@ -28,6 +28,8 @@ import DynamicDropdownMenu from '../components/Selection_component'
 import dayjs from 'dayjs';
 import RightDrawer from '../components/Drawer_settings'
 import DateTimeForm from '../components/Time_component'
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import '../../styles.css';
 
 
 
@@ -313,13 +315,13 @@ const handleDelete = async (index) => {
                 <Button variant="outlined" onClick={() => setEditIndex(null)}>Cancel</Button>
               </>
             ) : (
-              <Button variant="contained" onClick={() => { setEditIndex(index); setEditValue(item.value); }}>
+              <Button className="manage-users-button" variant="contained" onClick={() => { setEditIndex(index); setEditValue(item.value); }}>
                 Edit
               </Button>
             )}
           </TableCell>
           <TableCell align="right">
-            <Button onClick={() => handleDelete(item)} variant="contained" color="error">
+            <Button className="red-button" onClick={() => handleDelete(item)} variant="contained" color="error">
               Delete
             </Button>
           </TableCell>
@@ -332,8 +334,24 @@ const handleDelete = async (index) => {
     setCombinedData(newData);
 };
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#000000', // Example primary color
+    },
+    secondary: {
+      main: '#dc3545', // Example secondary color
+    },
+  },
+});
+// const hasAdminScope = scopes.includes('admin');
+// const hasEmployeeScope = scopes.includes('employee');
+// const hasBasicScope = scopes.includes('basic');
+
 
 return (
+  <div>
+    <ThemeProvider theme={theme}>
     <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 2 }}>
       <Typography variant="h6">Data Editor</Typography>
       <Grid container spacing={2}>
@@ -352,7 +370,7 @@ return (
           startDate={startDate}
           endDate={endDate}
         />
-          <Button onClick={fetchData} variant="contained" color="primary" sx={{ mt: 2 }}>
+          <Button className="custom-button" onClick={fetchData} variant="contained" color="primary" sx={{ mt: 2 }}>
             Fetch Data
           </Button>
         </Grid>
@@ -361,7 +379,7 @@ return (
       <div>
       <ButtonGroup variant="contained" aria-label="outlined primary button group">
         {data.length > 0 || Object.keys(data).length !== 0 && Object.keys(data).map(measurement => (
-          <Button key={measurement} onClick={() => handleMeasurementChange(measurement)}>
+          <Button className="custom-button1"  key={measurement} onClick={() => handleMeasurementChange(measurement)}>
             {measurement}
           </Button>
         ))}
@@ -382,7 +400,8 @@ return (
       </TableContainer>
     </div>
     </Box>
-
+    </ThemeProvider>
+    </div>
   );
 };
 

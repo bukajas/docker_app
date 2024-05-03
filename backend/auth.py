@@ -12,11 +12,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from fastapi.security import OAuth2PasswordBearer
+import time
 
 SECRET_KEY = "a_very_secret_key"
 ALGORITHM = "HS256"
 
-
+# time.sleep(5)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",

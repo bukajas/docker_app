@@ -17,7 +17,7 @@ import {
 import DateTimeForm from '../components/Time_component'
 import DynamicDropdownMenu from "../components/Selection_component"
 import dayjs from 'dayjs';
-
+import '../../styles.css';
 
 const DataExportForm2 = () => {
   const [measurements, setMeasurements] = useState([]);
@@ -166,10 +166,10 @@ return (
         ))}
       </>
     )}
-    <Button onClick={handleSubmit} type="submit" variant="contained" color="primary">
+    <Button className="export-button" onClick={handleSubmit} type="submit" variant="contained" color="primary">
       Export Data
     </Button>
-    <Button onClick={handleAggregate} type="submit" variant="contained" color="secondary">
+    <Button className="export-aggregated-button" onClick={handleAggregate} type="submit" variant="contained" color="secondary">
       Aggregated Data
     </Button>
   </form>

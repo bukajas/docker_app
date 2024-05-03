@@ -27,7 +27,13 @@ async def read_last_timestamp():
     tz_cest = pytz.timezone('Europe/Berlin')
     tz_utc = pytz.timezone('UTC')
     query = 'from(bucket: "test") |> range(start: -10m) |> last()'
-    result1 = client.query_api().query(query, org=INFLUXDB_ORG)
+    try:
+        result1 = client.query_api().query(query, org=INFLUXDB_ORG)
+    except:
+        print("An exception occurred") 
+        return None
+
+
     newest_timestamp = None
     for table in result1:
         for record in table.records:

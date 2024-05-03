@@ -1,39 +1,26 @@
-import time
-import random
-from pydnp3 import DNP3Master, DNP3Exception
+class CANopenNode:
+    def __init__(self, node_id):
+        self.node_id = node_id
+        self.message_handlers = {}
 
-# Define function to generate random data
-def generate_random_data():
-    return random.randint(0, 100)
+    def send_message(self, cob_id, data):
+        if cob_id in self.message_handlers:
+            self.message_handlers[cob_id](data)
+        else:
+            print(f"Node {self.node_id}: Sending message on COB-ID {cob_id}: {data}")
 
-# Define function to handle data received by the master
-def master_data_handler(data):
-    print("Master received data:", data)
+    def add_message_handler(self, cob_id, handler):
+        self.message_handlers[cob_id] = handler
 
-# Define function to simulate the master
-def simulate_master(master):
-    while True:
-        data = generate_random_data()
-        try:
-            master.send_data(data)
-            print("Master sent data:", data)
-        except DNP3Exception as e:
-            print("Error:", e)
-        time.sleep(2)  # Simulate a delay between sending data
+# Create a simulated CANopen node
+node = CANopenNode(node_id=1)
 
-if __name__ == "__main__":
-    try:
-        master = DNP3Master("127.0.0.1", 20000, data_handler=master_data_handler)
+# Define message handler
+def handle_message(data):
+    print(f"Received message: {data}")
 
-        master.start()
+# Register the message handler
+node.add_message_handler(cob_id=0x101, handler=handle_message)
 
-        # Start simulating master sending data
-        simulate_master(master)
-
-        # Keep the main thread running
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("Exiting...")
-    finally:
-        master.stop()
+# Simulate sending a message
+node.send_message(cob_id=0x101, data=[0x01, 0x02, 0x03])
