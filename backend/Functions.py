@@ -42,7 +42,7 @@ def generate_flux_query2(data,start,end,bucket):
 def get_measurements_with_tags(start,end):
     query_api = client.query_api()
     measurement_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: {start}, stop: {end}) |> keep(columns: ["_measurement"]) |> distinct(column: "_measurement")'
-
+    print(measurement_query)
     measurements_result = query_api.query(org=INFLUXDB_ORG, query=measurement_query)
     measurements = [record.get_value() for table in measurements_result for record in table.records]
 
@@ -53,6 +53,7 @@ def get_measurements_with_tags(start,end):
     # Loop through each filtered measurement to query their tags
     for measurement in measurements:
         tags_query = f'from(bucket:"{INFLUXDB_BUCKET}") |> range(start: {start}, stop: {end}) |> filter(fn: (r) => r._measurement == "{measurement}") |> keys() |> keep(columns: ["_value"]) |> distinct(column: "_value")'
+        print(tags_query)
         tags_result = query_api.query(org=INFLUXDB_ORG, query=tags_query)
         tags = [record.get_value() for table in tags_result for record in table.records if record.get_value().startswith('_') is False]  # Exclude system tags/fields
         measurements_with_tags[measurement] = tags

@@ -46,9 +46,6 @@ async def read_data(readData: ReadData, current_user: Annotated[models.User, Sec
 
 
 
-
-
-
 @router.post("/read_data_dynamic", tags=["Read"])
 async def read_data_dynamic(
     readData: schemas.DynamicReadData,
@@ -57,6 +54,7 @@ async def read_data_dynamic(
         formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(readData.start_time)
         formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(readData.end_time)
         flux_query = Functions.generate_flux_query(readData.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
+        print(flux_query)
         tables = client.query_api().query(flux_query)
         data = []
         for table in tables:
@@ -69,7 +67,7 @@ async def read_data_dynamic(
         j = {"data": grouped_data}
         formatted_data = Time_functions.format_timestamps_utc_to_cest(j)
         
-
+        print(formatted_data)
         return formatted_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

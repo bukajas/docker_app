@@ -36,15 +36,6 @@ async def modify_data_read(
         formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(request_body.end_time)
         flux_query = Functions.generate_flux_query(request_body.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
 
-
-        query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: {formatted_timestamp_start}, stop: {formatted_timestamp_end}) |> filter(fn: (r) => r["_measurement"] == "{"coil_list"}")'
-
-        # if request_body.tag_filters:
-        #     for tag, value in request_body.tag_filters.items():
-        #         query += f' |> filter(fn: (r) => r["{tag}"] == "{value}")'
-        
-        # Debug: print the query to check if it's correctly formatted
-        # Assuming 'client' is an instance of your InfluxDB client
         tables = client.query_api().query(flux_query)
         # Extract data values from the query result
         data = []
@@ -117,9 +108,6 @@ async def modify_data_update(
             bucket=INFLUXDB_BUCKET,
             org=INFLUXDB_ORG
         )
-
-
-        
         point = Point(update_request.measurement)\
                 .field("_value", update_request.new_value)\
                 .time(update_request.time)

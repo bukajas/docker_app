@@ -26,8 +26,6 @@ services:
       - ./users_db:/var/lib/mysql
 
 
-
-
   docker-fastapi:
     build:
       context: ./backend
@@ -39,7 +37,6 @@ services:
       - '8000:8000'
     volumes:
       - ./backend:/fastapi
-    restart: always
           
   docker-influxdb:
     image: influxdb:2.7.5

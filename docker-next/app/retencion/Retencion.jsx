@@ -10,6 +10,9 @@ import TextField from '@mui/material/TextField';
 import { AuthContext } from '../context/AuthContext';  // Make sure the path matches where the AuthContext is defined
 import '../../styles.css';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
+
+
 
 const RetentionPolicyPopup = ({ bucketId }) => {
   const [open, setOpen] = useState(false);
@@ -113,29 +116,28 @@ const RetentionPolicyPopup = ({ bucketId }) => {
   });
 
   return (
-    <>
     <ThemeProvider theme={theme}>
-
-   
-      {isAuthenticated && (hasAdminScope || hasEmployeeScope) && (
-        <Button className="manage-users-button" onClick={handleClickOpen}>
-          Change Retention Policy
-        </Button>
-      )}
+      <Button className="manage-users-button" onClick={handleClickOpen}>
+        Change Retention Policy
+      </Button>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Set Retention Policy</DialogTitle>
-        <DialogTitle>Retention Policy (e.g., 1w, 30d, 1y). 0s means no retenction policy</DialogTitle>
-        <DialogTitle>s - seconds, m - minutes, h - hours,d - day, M - moth, y - ysear </DialogTitle>
-
         <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            Current Policy: <strong>{retention || "Not set"}</strong>
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Enter a value like 1w, 30d, or 1y. Use '0s' for no retention.
+          </Typography>
           <TextField
             autoFocus
             margin="dense"
             id="retention"
-            label=""
+            label="Retention Duration"
             type="text"
             fullWidth
-            variant="standard"
+            variant="outlined"
+            placeholder="e.g., 1w, 30d, 1y"
             value={retention}
             onChange={(e) => setRetention(e.target.value)}
           />
@@ -145,8 +147,7 @@ const RetentionPolicyPopup = ({ bucketId }) => {
           <Button onClick={handleSave}>Save</Button>
         </DialogActions>
       </Dialog>
-      </ThemeProvider>
-    </>
+    </ThemeProvider>
   );
 };
 

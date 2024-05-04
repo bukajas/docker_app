@@ -34,13 +34,13 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 
 #! TODO frontend 
 #! TODO admin can change users roles
-@router.post("/register", tags=["authentication"])
-def register_user( user: schemas.UserCreate, db: Session = Depends(auth.get_db), response_model=schemas.UserInDB,):
+@router.post("/register",response_model=schemas.UserInDB, tags=["authentication"])
+def register_user( user: schemas.UserCreate, db: Session = Depends(auth.get_db), ):
     # Check if the username already exists
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-    print(response_model)
+
     # Hash the password and create a new user instance
     hashed_password = auth.get_password_hash(user.password)
     db_user = models.User(username=user.username, hashed_password=hashed_password, role='basic')  # Set role as 'basic'
@@ -57,7 +57,7 @@ def register_user( user: schemas.UserCreate, db: Session = Depends(auth.get_db),
 #TODO something like that if there will be that the user have permission for only specific data, than id should somehow know which data he wants to acces and only show it to him.
 #TODO probably users that have permissions for specific DBs?
 
-@router.post("/login", tags=["authentication"])
+@router.post("/login", response_model=schemas.UserInDB, tags=["authentication"])
 def login(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if not db_user or not auth.verify_password(user.password, db_user.hashed_password):

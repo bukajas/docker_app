@@ -41,7 +41,7 @@ app.include_router(authentication.router)
 app.include_router(users.router)
 app.include_router(measurements.router)
 app.include_router(read.router)
-app.include_router(write.router)
+# app.include_router(write.router)
 
 
 

@@ -8,25 +8,16 @@ import {
   ButtonGroup,
   Grid,
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  FormControlLabel,
-  Switch,
   Paper,
-  TablePagination
 } from '@mui/material';
-import { format } from 'date-fns';
 import DynamicDropdownMenu from '../components/Selection_component'
 import dayjs from 'dayjs';
-import RightDrawer from '../components/Drawer_settings'
 import DateTimeForm from '../components/Time_component'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import '../../styles.css';
@@ -47,22 +38,16 @@ const sortDataByTime = (data) => {
 const DataEditor = () => {
   const [measurements, setMeasurements] = useState({});
   const [selectedMeasurement, setSelectedMeasurement] = useState('');
-  const [rangeInMinutes, setRangeInMinutes] = useState('');
-  const [tagFilters, setTagFilters] = useState({});
   const [data, setData] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [useMinutesAgo, setUseMinutesAgo] = useState(false);
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
   const [range, setRange] = useState('');
-  const [rangeUnit, setRangeUnit] = useState('minutes'); // Default value is minutes
-  const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
   const [tags, setTags] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [combinedData, setCombinedData] = useState({})
-  const [selectionsFromDrawer, setSelectionsFromDrawer] = useState([]);
   const [currentTime, setCurrentTime] = useState(dayjs());
   const [currentMeasurement, setCurrentMeasurement] = useState(null);
 
@@ -101,28 +86,6 @@ const DataEditor = () => {
     return formattedData;
 };
 
-
-
-
-  const handleTagFilterChange = (tag, value) => {
-    setTagFilters((prevFilters) => ({ ...prevFilters, [tag]: value }));
-  };
-
-  const handleSwitchChange = (event) => {
-    setUseMinutesAgo(event.target.checked);
-    if (event.target.checked) {
-      setFromTime('');
-      setToTime('');
-    } else {
-      setRange('');
-    }
-  };
-
-  const handleNow = () => {
-    const now = new Date().toISOString().slice(0, 16);
-    setFromTime(now);
-    setToTime(now);
-  };
 
   useEffect(() => {
     if (fromTime && toTime || range) {
@@ -170,12 +133,6 @@ const DataEditor = () => {
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
-  };
-
-
-  const handleEdit = (index) => {
-    setEditIndex(index);
-    setEditValue(data[index].value);
   };
 
 
@@ -271,21 +228,6 @@ const handleDelete = async (index) => {
     } catch (error) {
       console.error('Error updating data:', error);
     }
-  };
-
-  const renderTagInputs = () => {
-    const measurementTags = measurements[selectedMeasurement] || [];
-    return measurementTags.map((tag) => (
-      <TextField
-        key={tag}
-        label={tag}
-        variant="outlined"
-        margin="normal"
-        fullWidth
-        onChange={(e) => setTags({ ...tags, [tag]: e.target.value })}
-        required
-      />
-    ));
   };
 
   const renderTableRows = () => {
