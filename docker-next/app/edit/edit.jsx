@@ -50,6 +50,7 @@ const DataEditor = () => {
   const [combinedData, setCombinedData] = useState({})
   const [currentTime, setCurrentTime] = useState(dayjs());
   const [currentMeasurement, setCurrentMeasurement] = useState(null);
+  const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false)
 
   const handleMeasurementChange = (measurement) => {
     setCurrentMeasurement(measurement);

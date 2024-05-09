@@ -14,7 +14,7 @@ const ExportButton = ({ chartRef }) => {
     }
 };
   return (
-    <Button onClick={exportChart} style={{ marginTop: '10px' }}>Export Chart</Button>
+    <Button className="custom-button1" onClick={exportChart} style={{  width: '100%' }}>Export Chart</Button>
     
   );
 };

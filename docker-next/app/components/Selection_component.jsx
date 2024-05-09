@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -72,7 +71,7 @@ export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate })
   };
 
   return (
-    <Box>
+    <div style={{ margin: '20px', backgroundColor: '#fff', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
       <Tabs
         value={selectedTab}
         onChange={handleTabChange}
@@ -87,7 +86,7 @@ export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate })
       </Tabs>
       {data && Object.keys(data).map((category, index) => (
         <Collapse in={selectedTab === index} timeout="auto" unmountOnExit key={category}>
-          <Box margin={2}>
+          <div style={{ padding: '10px' }}>
             <FormControlLabel
               control={<Checkbox checked={!!checkedCategories[category]} onChange={() => handleCategoryCheck(category)} />}
               label={`Toggle ${category}`}
@@ -107,9 +106,9 @@ export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate })
                 ))}
               </div>
             )}
-          </Box>
+          </div>
         </Collapse>
       ))}
-    </Box>
+    </div>
   );
 }

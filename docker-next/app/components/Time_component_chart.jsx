@@ -11,12 +11,12 @@ dayjs.locale('en');
 
 
 
-function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, initialEndDate,currentTime }) {
+function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, initialEndDate,currentTime,mode, setMode, }) {
   const [startDate, setStartDate] = React.useState(dayjs().subtract(1, 'minute')); 
   const [endDate, setEndDate] = React.useState(dayjs());
   const [range, setRange] = React.useState(1);
   const [rangeUnit, setRangeUnit] = React.useState('minutes');
-  const [mode, setMode] = React.useState('relative');
+  // const [mode, setMode] = React.useState('relative');
 
   const handleStartDateChange = (newStartDate) => {
     setStartDate(newStartDate);
@@ -71,7 +71,7 @@ function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, in
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Grid container spacing={0}>
         <Grid item xs={12}>
-          <Button onClick={handleModeToggle} style={{ margin: '10px' }}>
+          <Button className="custom-button" onClick={handleModeToggle} style={{ width: '100%' }}>
             Switch to {mode === 'absolute' ? 'Relative' : 'Absolute'} Time
           </Button>
         </Grid>

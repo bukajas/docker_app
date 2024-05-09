@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import ChartComponent2 from './new_chart'; // Adjust the path as necessary
 import { Button, SpeedDial, SpeedDialIcon, SpeedDialAction } from '@mui/material';
 // import AddIcon from '@mui/icons-material/Add'; // Icon for the speed dial
+import '../../styles.css';
+
 
 function ChartContainer() {
   const [charts, setCharts] = useState([]);
@@ -17,13 +19,11 @@ function ChartContainer() {
     setCharts(charts.filter(id => id !== chartId));
   };
 
-  // // Toggle Speed Dial open/close
-  // const handleOpen = () => setOpen(true);
-  // const handleClose = () => setOpen(false);
+
 
   return (
     <div>
-      <Button variant="contained" color="primary" onClick={handleCreateChart}>
+      <Button className="export-button" variant="contained" color="primary" onClick={handleCreateChart}>
         Create Chart
       </Button>
       {charts.map(chartId => (
@@ -36,9 +36,6 @@ function ChartContainer() {
       <SpeedDial
         ariaLabel="SpeedDial basic example"
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        // icon={<SpeedDialIcon />}
-        // onOpen={handleOpen}
-        // onClose={handleClose}
         onClick={handleCreateChart}
         open={open}
       >

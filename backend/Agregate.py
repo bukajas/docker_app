@@ -28,17 +28,18 @@ async def read_last_timestamp():
     tz_utc = pytz.timezone('UTC')
     query = 'from(bucket: "test") |> range(start: -10m) |> last()'
     try:
-        print("Executing query...")
+        # print("Executing query...")
         result1 = client.query_api().query(query, org=INFLUXDB_ORG)
-        if result1:
-            print("Query result:", result1)
-        else:
-            print("No data returned from the query.")
+        # if result1:
+            # print("Query result:", result1)
+        # else:
+            # print("No data returned from the query.")
     except Exception as e:
         print("An unexpected error occurred:", e)
     finally:
         # Any cleanup or further logic can be handled here
         print("Query execution completed.")
+        pass
 
 
     newest_timestamp = None

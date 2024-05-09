@@ -3,6 +3,8 @@ import { Drawer,Box,Tabs,Tab, Checkbox, FormControlLabel, Accordion, AccordionSu
 import {stringToDictionary,aggregateDataDynamically} from '../components/Functions'
 import DynamicDropdownMenu from '../components/Selection_component'
 import DateTimeForm from '../components/Time_component'
+import '../../styles.css';
+
 
 function filterDataBySelections(dataKeys, selectionsFromDrawer) {
     // Filter each data item
@@ -34,10 +36,12 @@ function RightDrawer({data, onSelectionsChange}) {
 
 
     useEffect(() => {
+      // console.log(selections,data)
         if(data){
 
             const keys = Object.keys(data);
             const dictionary = stringToDictionary(keys);
+          
             setDataKeys(aggregateDataDynamically(dictionary));
             if(dictionary){
                 setSelectedButtons(filterDataBySelections(dictionary, selections));
@@ -69,40 +73,53 @@ function RightDrawer({data, onSelectionsChange}) {
 
 
     const handleToggle = (measurement, key, value) => {
-        const currentSelections = selections[measurement]?.[key] || [];
-        const newSelections = currentSelections.includes(value)
-          ? currentSelections.filter(v => v !== value)
-          : [...currentSelections, value];
-    
-        setSelections({
-          ...selections,
-          [measurement]: {
-            ...selections[measurement],
-            [key]: newSelections
-          }
-        });
+      const currentSelections = selections[measurement]?.[key] || [];
+      // console.log(selections);
+      const newSelections = currentSelections.includes(value)
+        ? currentSelections.filter(v => v !== value)
+        : [...currentSelections, value];
+  
+      // Prepare updated selections for the current measurement
+      const updatedMeasurementSelections = {
+        ...selections[measurement],
+        [key]: newSelections
       };
+  
+      // Check and delete any keys with empty lists
+      for (const k in updatedMeasurementSelections) {
+        if (updatedMeasurementSelections[k].length === 0) {
+          delete updatedMeasurementSelections[k];
+        }
+      }
+      
+      // Update the entire selections object
+      setSelections(prevSelections => ({
+        ...prevSelections,
+        [measurement]: updatedMeasurementSelections
+      }));
 
-    const tabContent = (index) => {
-        switch (index) {
-            case 0:
-                return (<div>
-                </div>)
-            case 1:
-                return (
-                    <div>
-                        {selectedButtons.map(item => (
-                            <div key={item.host + item._measurement}>
-                                Measurement: {item._measurement} - Host: {item.host}
-                                {/* Render other properties as needed */}
-                            </div>
-                        ))}
-                    </div>
-                );
-            case 2:
-                return (
-                    <Box>
-                    {dataKeys.map((measurement) => (
+  };
+
+
+    return (
+        <div>
+            <Button className="custom-button2" onClick={toggleDrawer(true)} style={{ width: '100%' }}>
+              Open Right Drawer
+            </Button>
+            <Drawer
+                anchor='right'
+                open={isOpen}
+                onClose={() => setIsOpen(false)}
+                sx={{ width: '30%', flexShrink: 0 }}
+                PaperProps={{ style: { width: '30%' } }}
+            >
+                <Box
+                    sx={{ width: '100%', height: '100%' }}
+                    role="presentation"
+                    onKeyDown={toggleDrawer(false)}
+                >
+<Box>
+                    {dataKeys && dataKeys.map((measurement) => (
                       <Box key={measurement._measurement} margin={2} padding={2} border={1} borderRadius={2}>
                         <Typography variant="h6">{measurement._measurement}</Typography>
                         {Object.keys(measurement).filter(key => key !== '_measurement').map(key => (
@@ -130,42 +147,9 @@ function RightDrawer({data, onSelectionsChange}) {
                     ))}
                     <Button variant="contained" onClick={() => console.log(selections)}>Print Selections</Button>
                   </Box>
-                );
-              
-                    
-            default:
-                return <Typography>Unknown Tab</Typography>;
-        }
-    };
-
-    return (
-        <div>
-            <Button onClick={toggleDrawer(true)}>Open Right Drawer</Button>
-            <Drawer
-                anchor='right'
-                open={isOpen}
-                onClose={() => setIsOpen(false)}
-                sx={{ width: '30%', flexShrink: 0 }}
-                PaperProps={{ style: { width: '30%' } }}
-            >
-                <Box
-                    sx={{ width: '100%', height: '100%' }}
-                    role="presentation"
-                    onKeyDown={toggleDrawer(false)}
-                >
-                    <Tabs
-                        value={selectedTab}
-                        onChange={handleTabChange}
-                        aria-label="Tab selection"
-                        variant="fullWidth"
-                    >
-                        <Tab label="Selected" />
-                        <Tab label="Query" />
-                        <Tab label="Data" />
-                    </Tabs>
-                    <Box sx={{ p: 3 }}>
+                    {/* <Box sx={{ p: 3 }}>
                         {tabContent(selectedTab)}
-                    </Box>
+                    </Box> */}
                 </Box>
             </Drawer>
         </div>

@@ -67,7 +67,7 @@ async def update_retention(data: RetentionPolicy, current_user: Annotated[models
                 every_seconds=retention_seconds,
             )]
         buckets_api = client.buckets_api()
-        print(data.retention,retention_seconds)
+        # print(data.retention,retention_seconds)
         updated_bucket = buckets_api.update_bucket(bucket)
     
 
@@ -87,8 +87,8 @@ def get_bucket_retention_policy():
         buckets_api = client.buckets_api()
         buckets = buckets_api.find_buckets().buckets
         for bucket in buckets:
-            print(f"Bucket Name: {bucket.name}")
-            print(f"Retention Policy: {bucket.retention_rules}")  # This shows the retention settings
+            # print(f"Bucket Name: {bucket.name}")
+            # print(f"Retention Policy: {bucket.retention_rules}")  # This shows the retention settings
 
             if bucket.name == INFLUXDB_BUCKET:
                 return bucket.retention_rules

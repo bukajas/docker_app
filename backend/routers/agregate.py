@@ -33,7 +33,7 @@ async def agregate(
     |> group()
     |> yield()
     '''
-    print(flux_query)
+    # print(flux_query)
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
 
         results = client.query_api().query_data_frame(query=flux_query, org=INFLUXDB_ORG)

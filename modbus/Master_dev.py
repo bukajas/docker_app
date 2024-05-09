@@ -1,82 +1,99 @@
-import requests
-import random
+#!/usr/bin/env python
+
+from pymodbus.client import ModbusTcpClient
+import logging
 import time
+import requests
+from requests.auth import HTTPBasicAuth
+import random
+import threading
 
-# Function to authenticate and obtain token
-def get_token(url, username, password):
-    response = requests.post(url, data={"username": username, "password": password})
-    if response.status_code == 200:
-        return response.json()["access_token"]
-    else:
-        raise Exception("Authentication failed")
+logging.basicConfig()
+log = logging.getLogger()
+log.setLevel(logging.DEBUG)
 
-# Main function to send Modbus data
-def send_modbus_data():
-    token_url = "http://127.0.0.1:8000/token"  # Update with your FastAPI server token URL
-    modbus_url = "http://127.0.0.1:8000/modbus"  # Update with your FastAPI server URL
-    username = "test"  # Update with your actual username
-    password = "test"  # Update with your actual password
+client = ModbusTcpClient('localhost', port=5020)
+telegraf_url = 'https://localhost:8186/telegraf'
+auth = HTTPBasicAuth('test', 'test')
+ca_bundle = '/etc/ssl/telegraf.cert'
 
-    # Authenticate and obtain token
-    token = get_token(token_url, username, password)
-    print("Authenticated successfully")
-
-    # ! modbus type: 1 for RTU, 2 for TCP
+def read_and_send():
     while True:
-        new_coil = 100
-        new_temperature = random.uniform(0, 100)
-        new_slaveID = random.randint(4,10)
-        new_masterID = random.randint(1,3)
-        new_modbusType = random.randint(1,2)
-        # print(new_temperature)
+        rr = client.read_holding_registers(1, 5, unit=1)
+        if not rr.isError():
+            log.debug(f"Read holding registers: {rr.registers}")
+            current_time = time.localtime()
+            seconds = current_time.tm_sec
+            r = random.randint(1,100)
+            data1 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=2,protocol=modbus data={}'.format(100 + seconds + 1)
+            new_list = [random.randint(0,100) for _ in range(len(rr.registers))]
+            data_list = [
+                f'vibration,VendorID={r},NetworkType=serial,unit={r},speed={r},protocol=ethernet/ip data={r}',
+                f'vibration,VendorID=sonic,NetworkType=serial,unit=2,speed=30,protocol=ethernet/ip data={r+1}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                                f'vibration,VendorID={r},NetworkType=serial,unit={r},speed={r},protocol=ethernet/ip data={r}',
+                f'vibration,VendorID=sonic,NetworkType=serial,unit=2,speed=30,protocol=ethernet/ip data={r+1}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                                f'vibration,VendorID={r},NetworkType=serial,unit={r},speed={r},protocol=ethernet/ip data={r}',
+                f'vibration,VendorID=sonic,NetworkType=serial,unit=2,speed=30,protocol=ethernet/ip data={r+1}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}',
+                f'vibration,VendorID=azonaj,NetworkType=tcp,unit=1,speed={r},protocol=ethernet/ip data={r+2}',
+                f'coil_list,slaveID=1,masterID={r},unit=1,modbusType=1,protocol=modbus data={r+3}',
+                f'coil_list,slaveID={r},masterID=2,unit=2,modbusType=1,protocol=modbus data={r+4}'
+            ]
 
-        # data = {
-        #     "coils": [new_coil],  # Example coils data
-        #     "temperature_data": [new_temperature],  # Example temperature data
-        #     "slaveID": str(new_slaveID),
-        #     "masterID": str(new_masterID),
-        #     "modbusType": str(new_modbusType)  # Updated to string to match Pydantic model expectations
-        # }
+            data = "\n".join(data_list)
+            try:
+                requests.post(telegraf_url, data=data, auth=auth, verify=ca_bundle)
+                log.info("Data sent to Telegraf")
+            except Exception as e:
+                log.error(f"Error sending data to Telegraf: {e}")
+        else:
+            log.error(f"Error reading holding registers: {rr}")
+        time.sleep(1)  # Sleep for 1 second before next read
 
-        data1 = {
-            "lalalal": [new_coil],  # Example coils data
-            "temperature_data": [new_temperature],  # Example temperature data
-            "slaveID": "1",
-            "masterID": "1",
-            "modbusType": "1"  # Updated to string to match Pydantic model expectations
-        }
-        data2 = {
-            "coils": [new_coil + random.randint(0,100)],  # Example coils data
-            "temperature_data": [new_temperature + random.randint(0,100)],  # Example temperature data
-            "slaveID": "2",
-            "masterID": "2",
-            "modbusType": "2"  # Updated to string to match Pydantic model expectations
-        }
-        headers = {"Authorization": f"Bearer {token}"}
-        response1 = requests.post(modbus_url, json=data1, headers=headers)
+def main():
+    threads = []
+    for _ in range(1000):  # Create 10 threads
+        thread = threading.Thread(target=read_and_send)
+        thread.start()
+        threads.append(thread)
 
-        if response1.status_code == 200:
-            print("Data sent successfully to FastAPI")
-        # else:
-        #     print(f"Error sending data to FastAPI: {response2.text}")
+    for thread in threads:
+        thread.join()  # Wait for all threads to complete
 
-
-
-        response2 = requests.post(modbus_url, json=data2, headers=headers)
-        if response2.status_code == 200:
-            print("Data sent successfully to FastAPI")
-        # else:
-        #     print(f"Error sending data to FastAPI: {response2.text}")
-
-
-        time.sleep(5)
-
-if __name__ == "__main__":
-    send_modbus_data()
-
-
-
-# TODO extend it, and make it master and client, with working updating server, that generated random data for now
-    
-
-    
+if __name__ == '__main__':
+    try:
+        main()
+    finally:
+        client.close()

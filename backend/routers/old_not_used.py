@@ -13,7 +13,7 @@ async def available_data_types(request: Request, current_user: Annotated[models.
 
     try:
         body = await request.json()
-        print(body)
+        # print(body)
         slave_id = body.get("slaveId")
         master_id = body.get("masterId")
         modbus_type = body.get("modbusType")

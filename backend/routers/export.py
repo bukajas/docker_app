@@ -27,7 +27,7 @@ async def export_csv(
     formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(export_request.start_time)
     formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(export_request.end_time)
     flux_query = Functions.generate_flux_query2(export_request.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
-    print(flux_query)
+    # print(flux_query)
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
 
         results = client.query_api().query_data_frame(query=flux_query, org=INFLUXDB_ORG)

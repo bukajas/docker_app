@@ -36,26 +36,7 @@ export default function Home() {
     setActiveComponent('charts');
   };
 
-  // Function to display the chart instances
-  const renderCharts = () => (
-    <>
-      <Button variant="contained" color="primary" onClick={addChartInstance}>
-        Add New Chart
-      </Button>
-      {chartInstances.length === 0 ? (
-        <Typography>No charts to display. Use the "Add New Chart" button to get started.</Typography>
-      ) : (
-        chartInstances.map(chart => (
-          <div key={chart.id}>
-            {chart.component}
-            <Button variant="contained" color="error" onClick={() => deleteChartInstance(chart.id)}>
-              Delete This Chart
-            </Button>
-          </div>
-        ))
-      )}
-    </>
-  );
+
   // Drawer items
   const drawerItems = (
     <List>
@@ -83,8 +64,8 @@ export default function Home() {
 
 
   return (
-    <div>
-      <AuthProvider>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <AuthProvider>
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
@@ -96,21 +77,21 @@ export default function Home() {
           <RetentionPolicyPopup />
         </Toolbar>
       </AppBar>
-      <Drawer variant="permanent" anchor="left">
-        <DrawerItems setActiveComponent={setActiveComponent} />
-      </Drawer>
-      <Container>
-        {/* Conditionally render components based on activeComponent state */}
-{/* Conditionally render components based on activeComponent state */}
-        {activeComponent === 'default' && <DropdownMenu/>}
-        {/* {activeComponent === 'charts' && renderCharts()} */}
-        {activeComponent === 'edit' && <DataEditor />}
-        {activeComponent === 'delete' && <DeleteDataForm />}
-        {activeComponent === 'export' && <DataExportForm2 />}
-        {activeComponent === 'Graphs' && <ChartContainer />}
-        {/* Add other conditional components as needed */}
-      </Container>
-      </AuthProvider>
-    </div>
+      <div style={{ display: 'flex', flexDirection: 'column-reverse', flexGrow: 1 }}>
+        <Container maxWidth="xl" style={{ flexGrow: 1 }}>
+          {/* Conditionally render components based on activeComponent state */}
+          {activeComponent === 'default' && <DropdownMenu/>}
+          {activeComponent === 'edit' && <DataEditor />}
+          {activeComponent === 'delete' && <DeleteDataForm />}
+          {activeComponent === 'export' && <DataExportForm2 />}
+          {activeComponent === 'Graphs' && <ChartContainer />}
+          {/* Add other conditional components as needed */}
+        </Container>
+        <Drawer variant="permanent" anchor="left">
+          <DrawerItems setActiveComponent={setActiveComponent} />
+        </Drawer>
+      </div>
+    </AuthProvider>
+  </div>
   );
 }

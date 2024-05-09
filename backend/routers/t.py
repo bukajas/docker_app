@@ -8,4 +8,4 @@ for sublist in list_of_lists:
     first_values.add(sublist[0])
 
 # Print the unique first values
-print("Unique first values:", first_values)
+# print("Unique first values:", first_values)

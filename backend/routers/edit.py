@@ -61,7 +61,7 @@ async def modify_data_read(
             if measurement not in grouped_data:
                 grouped_data[measurement] = []
             grouped_data[measurement].append(item)
-        print(grouped_data)
+        # print(grouped_data)
         return grouped_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
