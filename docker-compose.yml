@@ -11,6 +11,9 @@ services:
     volumes:
       - ./docker-next:/app
       - /app/node_modules
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0  # Insecure, only for development with self-signed certificates
+
 
   docker-mysql:
     image: mysql:8.0

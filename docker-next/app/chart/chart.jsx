@@ -72,10 +72,10 @@ const LineChartPage = () => {
     const promises = requestBodyForEachDataType.map(async (requestBody) => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://127.0.0.1:8000/read_data`, {
+        const response = await fetch(`https://127.0.0.1:8000/read_data`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,b
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(requestBody),

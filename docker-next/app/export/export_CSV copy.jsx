@@ -46,7 +46,7 @@ const DataExportForm2 = () => {
         computedToTime = now.toISOString().slice(0, 16);
       }
 
-      const response = await fetch(`http://localhost:8000/filtered_measurements_with_tags?start=${computedFromTime}&end=${computedToTime}`, {
+      const response = await fetch(`https://localhost:8000/filtered_measurements_with_tags?start=${computedFromTime}&end=${computedToTime}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ const DataExportForm2 = () => {
             interval: rangeUnit
           };
         const token = localStorage.getItem('token');
-        const response = await fetch('http://127.0.0.1:8000/export_csv', {
+        const response = await fetch('https://127.0.0.1:8000/export_csv', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,

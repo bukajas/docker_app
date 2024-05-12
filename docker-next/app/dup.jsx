@@ -17,7 +17,7 @@ const LineChartPage = () => {
         async function fetchData() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://127.0.0.1:8000/read_data', {
+            const response = await fetch('https://127.0.0.1:8000/read_data', {
               headers: {
                 Authorization: `Bearer ${token}`,
               },

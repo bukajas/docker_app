@@ -32,7 +32,7 @@ const DataExportForm = () => {
       }
       console.log(computedFromTime, computedToTime)
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/export_csv', {
+      const response = await axios.get('https://localhost:8000/export_csv', {
         params: { 
           measurement, 
           field, 
@@ -58,7 +58,7 @@ const DataExportForm = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token'); // Ensure you have a token stored in localStorage
-        const response = await fetch('http://localhost:8000/filtered_measurements_with_tags', {
+        const response = await fetch('https://localhost:8000/filtered_measurements_with_tags', {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',

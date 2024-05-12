@@ -41,7 +41,7 @@ function Measurements() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token'); // Ensure you have a token stored in localStorage
-        const response = await fetch('http://localhost:8000/filtered_measurements_with_tags', {
+        const response = await fetch('https://localhost:8000/filtered_measurements_with_tags', {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ function Measurements() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/read_data_dynamic', {
+      const response = await fetch('https://localhost:8000/read_data_dynamic', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

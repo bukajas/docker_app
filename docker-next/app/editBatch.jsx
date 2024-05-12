@@ -24,7 +24,7 @@ const DataEditor = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://127.0.0.1:8000/modify_data_read', {
+      const response = await axios.get('https://127.0.0.1:8000/modify_data_read', {
         params: {
           start_time: startDateTime,
           end_time: endDateTime,
@@ -72,7 +72,7 @@ const DataEditor = () => {
   
     try {
       // Make a single API request to update all entries in the range
-      const response = await axios.post('http://127.0.0.1:8000/modify_data_update', payload);
+      const response = await axios.post('https://127.0.0.1:8000/modify_data_update', payload);
       console.log('Update successful:', response.data);
       // Notify the user of success
       alert('Data updated successfully');

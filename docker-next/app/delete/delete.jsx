@@ -4,6 +4,8 @@ import DynamicDropdownMenu from '../components/Selection_component'
 import dayjs from 'dayjs';
 import RightDrawer from '../components/Drawer_settings'
 import DateTimeForm from '../components/Time_component'
+import { fetchData } from '../utils/fetchData';
+
 
 const DeleteDataForm = () => {
   const [measurements, setMeasurements] = useState({});
@@ -25,10 +27,11 @@ const DeleteDataForm = () => {
   const [endDate, setEndDate] = useState("");
 
 
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const token = localStorage.getItem('token');
-    const apiUrl = 'http://127.0.0.1:8000/delete_data';
+    const apiUrl = 'https://127.0.0.1:8000/delete_data';
     // Combine date and time for start and end times
     const body = {
       data: combinedData,
@@ -36,7 +39,7 @@ const DeleteDataForm = () => {
       end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
     };
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetchData(apiUrl, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

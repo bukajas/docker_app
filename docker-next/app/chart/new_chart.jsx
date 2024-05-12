@@ -29,7 +29,7 @@ import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/i
 import ExportButton from '../export/export_image';
 import { Chart, registerables } from 'chart.js';
 import '../../styles.css';
-
+import { fetchData } from '../utils/fetchData';
 
 function convertDictToString(dict) {
   const keysToExclude = ['date', 'day', '_start', '_stop', '_time',"result","table","time","_value"];
@@ -221,7 +221,7 @@ function ChartComponent2({ measurementId, handleDelete }) {
       }
       
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/read_data_dynamic', {
+      const response = await fetch('https://localhost:8000/read_data_dynamic', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

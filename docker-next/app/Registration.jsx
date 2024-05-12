@@ -6,7 +6,7 @@ import axios from 'axios';
 import '../styles.css';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { AuthContext } from './context/AuthContext';  // Make sure the path matches where the AuthContext is defined
-
+import { fetchData } from './utils/fetchData';
 
 const Register = () => {
     const [open, setOpen] = useState(false);
@@ -37,7 +37,7 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8000/register', {
+            const response = await fetchData('/register', {
                 username: formData.username,
                 password: formData.password,
                 email: formData.email,

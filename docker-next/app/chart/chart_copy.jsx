@@ -6,6 +6,7 @@ import { ResizableBox } from 'react-resizable';
 import ExportButton from '../export/export_image';
 import 'react-resizable/css/styles.css'; // Import CSS for react-resizable
 import { Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { fetchData } from '../utils/fetchData';
 
 Chart.register(...registerables);
 
@@ -55,7 +56,7 @@ const LineChartPage = () => {
   const fetchDataTypes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/filtered_measurements_with_fields?slaveID=${slaveId}&masterID=${masterId}&modbusType=${modbusType}`, {
+      const response = await fetchData(`/filtered_measurements_with_fields?slaveID=${slaveId}&masterID=${masterId}&modbusType=${modbusType}`, {
         method: 'GET', // Assuming your endpoint is a GET request
         headers: {
           Authorization: `Bearer ${token}`,
@@ -95,7 +96,7 @@ const LineChartPage = () => {
     const promises = requestBodyForEachDataType.map(async (requestBody) => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://127.0.0.1:8000/read_data`, {
+        const response = await fetch(`https://127.0.0.1:8000/read_data`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,

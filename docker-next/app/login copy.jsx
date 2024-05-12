@@ -10,7 +10,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/token', `username=${username}&password=${password}`, {
+      const response = await axios.post('https://localhost:8000/token', `username=${username}&password=${password}`, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -27,7 +27,7 @@ function Login() {
   const fetchSecureMessage = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/secure-endpoint', {
+      const response = await axios.get('https://localhost:8000/secure-endpoint', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

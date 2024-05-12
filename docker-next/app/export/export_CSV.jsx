@@ -44,12 +44,12 @@ const DataExportForm2 = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    exportData('http://127.0.0.1:8000/export_csv');
+    exportData('https://127.0.0.1:8000/export_csv');
   };
 
   const handleAggregate = async (e) => {
     e.preventDefault();
-    exportData('http://127.0.0.1:8000/agregate');
+    exportData('https://127.0.0.1:8000/agregate');
   };
 
  const exportData = async (apiUrl) => {

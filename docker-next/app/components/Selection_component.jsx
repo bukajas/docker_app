@@ -6,6 +6,7 @@ import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Collapse from '@mui/material/Collapse';
 
+
 export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate }) {
   const [data, setData] = useState({ measurements_with_tags: {} });
   const [checkedCategories, setCheckedCategories] = useState({});
@@ -15,7 +16,8 @@ export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate })
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/filtered_measurements_with_tags?start=${startDate.format('YYYY-MM-DD HH:mm:ss')}&end=${endDate.format('YYYY-MM-DD HH:mm:ss')}`, {
+      console.log(startDate.format('YYYY-MM-DD HH:mm:ss'))
+      const response = await fetch(`https://localhost:8000/filtered_measurements_with_tags?start=${startDate.format('YYYY-MM-DD HH:mm:ss')}&end=${endDate.format('YYYY-MM-DD HH:mm:ss')}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

@@ -11,7 +11,7 @@ import { AuthContext } from '../context/AuthContext';  // Make sure the path mat
 import '../../styles.css';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-
+import { fetchData } from '../utils/fetchData';
 
 
 const RetentionPolicyPopup = ({ bucketId }) => {
@@ -49,7 +49,7 @@ const RetentionPolicyPopup = ({ bucketId }) => {
   const fetchCurrentRetention = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/get-retention`, {
+      const response = await fetchData(`/get-retention`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ const RetentionPolicyPopup = ({ bucketId }) => {
     try {
       console.log(retention)
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/update-retention`, {
+      const response = await fetch(`https://localhost:8000/update-retention`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

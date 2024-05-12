@@ -12,9 +12,9 @@ import models, auth, schemas
 router = APIRouter()
 
 # Replace these with your actual credentials and settings
-url = "http://localhost:8086"
-token = "your-token"
-org = "your-org"
+# url = "http://localhost:8086"
+# token = "your-token"
+# org = "your-org"
 
 
 

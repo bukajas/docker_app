@@ -13,7 +13,7 @@ const UsersPage = () => {
     // Function to fetch users
     const fetchUsers = async () => {
         try {
-            const response = await fetch('http://localhost:8000/users');
+            const response = await fetch('https://localhost:8000/users');
             if (!response.ok) throw new Error('Failed to fetch');
             const data = await response.json();
             setUsers(data);
@@ -30,7 +30,7 @@ const UsersPage = () => {
     const handleRoleChange = async (userId, newRole) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/users/${userId}/role`, {
+            const response = await fetch(`https://localhost:8000/users/${userId}/role`, {
                 method: 'PATCH',
                 headers: {
                     Authorization: `Bearer ${token}`,
