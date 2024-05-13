@@ -60,6 +60,7 @@ function ChartComponent2({ measurementId, handleDelete }) {
   const [chartType, setChartType] = useState('line');
   const [itemsToDisplay, setItemsToDisplay] = useState([]);
   const [mode, setMode] = useState('relative');
+  const [rightDrawerSignal, setRightDrawerSignal] = useState(new Date().getTime());
     // Refs to hold the current state values
   const startDateRef = useRef(startDate);
   const endDateRef = useRef(endDate);
@@ -74,25 +75,25 @@ function ChartComponent2({ measurementId, handleDelete }) {
 
 
   useEffect(() => {
-
-
-  
-
-
-
+    
     // Update itemsToDisplay based on whether selectionFromDrawer is empty
     if (selectionsFromDrawer.length > 0) {
+
       const dict = {};
+      // let dictlist = [];
     selectionsFromDrawer.map((value, index) => {
       const jsonObject = JSON.parse(value);
+      // if (!dictlist.includes(jsonObject['_measurement'])){
+      //   dictlist = [...dictlist, jsonObject['_measurement']]
+      // }
       delete jsonObject.result;
       jsonObject['measurement'] = jsonObject['_measurement'];
       delete jsonObject['_measurement'];
-
-
+      
+      
       dict[value] = jsonObject;
     });
-      // console.log(dict)
+
       
       setItemsToDisplay(dict);
 
@@ -112,8 +113,6 @@ function ChartComponent2({ measurementId, handleDelete }) {
 
       dict[value] = jsonObject;
     });
-      
-
       setItemsToDisplay(dict);
     }
   }, [dataKeys, selectionsFromDrawer]); // Dependencies ensure this effect runs when either prop changes
@@ -167,6 +166,7 @@ function ChartComponent2({ measurementId, handleDelete }) {
     
       // Filter data based on selected keys
       const filteredData = {};
+      
       selectedDataKey.forEach((key) => {
         let jsonString = JSON.stringify(key);
         let modifiedString = jsonString.slice(1, -1).replace(/: /g, ":").replace(/, /g, ",").replace(/"/g, "'").replace(/\\/g, "").replace(/,/g, ", ").replace(/:/g, ": ");
@@ -178,7 +178,6 @@ function ChartComponent2({ measurementId, handleDelete }) {
       const colors = ['rgb(75, 192, 192)', 'rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 205, 86)', 'rgb(153, 102, 255)']; // Add more colors as needed
     
       // Iterate over each key in the filtered data object
-
       Object.keys(filteredData).forEach((key, index) => {
         const datasetData = filteredData[key].map((d) => d._value);
         const datasetLabel = filteredData[key][index]; // Assuming all data points in the same key have the same measurement
@@ -189,6 +188,7 @@ function ChartComponent2({ measurementId, handleDelete }) {
           data: datasetData,
           fill: false,
           borderColor: colors[index % colors.length], // Use modulo to loop through the colors array
+          backgroundColor: colors[index % colors.length],
           tension: 0.1,
         };
     
@@ -214,12 +214,14 @@ function ChartComponent2({ measurementId, handleDelete }) {
     if (e) e.preventDefault();
     
     try {
+      setSelectedDataKey([])
+      setRightDrawerSignal(new Date().getTime());  // You can pass any data here
+      setSelectionsFromDrawer([])
       const body1 = {
         data: combinedData,
         start_time: startDateRef.current.format('YYYY-MM-DD HH:mm:ss'),
         end_time: endDateRef.current.format('YYYY-MM-DD HH:mm:ss'),
       }
-      
       const token = localStorage.getItem('token');
       const response = await fetch('https://localhost:8000/read_data_dynamic', {
         method: 'POST',
@@ -315,7 +317,6 @@ function ChartComponent2({ measurementId, handleDelete }) {
 
 
 const handleSelectionsChange = (newSelections) => {
-  
   const dictionary = stringToDictionary(dataKeys);
   const topLevelKeys = Object.keys(newSelections);
   let matchedDicts = [];
@@ -333,9 +334,8 @@ const handleSelectionsChange = (newSelections) => {
       }
     }
   });
-  // console.log(newSelections)
-  //  console.log(matchedDicts)
-  // console.log(dataKeys)
+  console.log(newSelections,matchedDicts)
+  
   setSelectionsFromDrawer(matchedDicts)
   setSelectedDataKey([]);
 };
@@ -439,6 +439,7 @@ return (
           <RightDrawer
           data={data}
           onSelectionsChange={handleSelectionsChange}
+          signal={rightDrawerSignal} 
         />
           ):(
             <>

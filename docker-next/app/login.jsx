@@ -63,6 +63,9 @@ function Login() {
   const hasAdminScope = scopes.includes('admin');
   const hasEmployeeScope = scopes.includes('employee');
   const hasBasicScope = scopes.includes('basic');
+  const hasNorightcope = scopes.includes('noright');
+  const hasReadScope = scopes.includes('read');
+  const hasReadWriteScope = scopes.includes('read+write');
 
   return (
     <div>

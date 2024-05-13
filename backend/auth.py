@@ -21,8 +21,7 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
-    scopes={"me": "Read information about the current user.", "items": "Read items.",
-            "basic": "basic no permisions", "admin": "all permisions", "employee": "almost all"},
+    scopes={"basic": "basic no permisions", "admin": "all permisions", "employee": "almost all","noright":"no rights", "read": "can read data not edit", "read+write": "can read and edit data"},
 )
 
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@docker-mysql/auth_users"

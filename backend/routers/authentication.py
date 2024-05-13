@@ -36,6 +36,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 #! TODO admin can change users roles
 @router.post("/register",response_model=schemas.UserInDB, tags=["authentication"])
 def register_user( user: schemas.UserCreate, db: Session = Depends(auth.get_db), ):
+    print("test")
     # Check if the username already exists
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
@@ -43,7 +44,7 @@ def register_user( user: schemas.UserCreate, db: Session = Depends(auth.get_db),
 
     # Hash the password and create a new user instance
     hashed_password = auth.get_password_hash(user.password)
-    db_user = models.User(username=user.username, hashed_password=hashed_password, role='basic')  # Set role as 'basic'
+    db_user = models.User(username=user.username, hashed_password=hashed_password, role='noright')  # Set role as 'basic'
     
     # Add the new user to the database and commit changes
     db.add(db_user)

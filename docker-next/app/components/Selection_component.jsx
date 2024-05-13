@@ -5,7 +5,7 @@ import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Collapse from '@mui/material/Collapse';
-
+import moment from 'moment';
 
 export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate }) {
   const [data, setData] = useState({ measurements_with_tags: {} });
@@ -14,9 +14,19 @@ export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate })
   const [selectedTab, setSelectedTab] = useState(0);
 
   const fetchData = async () => {
-    try {
+    try {     
+      
       const token = localStorage.getItem('token');
-      console.log(startDate.format('YYYY-MM-DD HH:mm:ss'))
+      const startMoment = moment(startDate);
+      const endMoment = moment(endDate);
+
+      // Check for valid, non-empty, and correctly ordered dates
+      // if (!startMoment.isValid() || !endMoment.isValid() || startMoment.isSame(endMoment) || startMoment.isAfter(endMoment)) {
+      if (!startMoment.isValid() || !endMoment.isValid() || startMoment.isAfter(endMoment) || startDate.isSame(endDate)) {
+        return;
+      }
+
+
       const response = await fetch(`https://localhost:8000/filtered_measurements_with_tags?start=${startDate.format('YYYY-MM-DD HH:mm:ss')}&end=${endDate.format('YYYY-MM-DD HH:mm:ss')}`, {
         headers: {
           Authorization: `Bearer ${token}`,

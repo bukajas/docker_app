@@ -24,7 +24,7 @@ function filterDataBySelections(dataKeys, selectionsFromDrawer) {
     });
 }
 
-function RightDrawer({data, onSelectionsChange}) {
+function RightDrawer({data, onSelectionsChange, signal}) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
   const [values,setValues] = useState({})
@@ -33,7 +33,13 @@ function RightDrawer({data, onSelectionsChange}) {
   const [selections, setSelections] = useState({});
 
 
+  useEffect(() => {
+    // Code to run when signal changes
+    console.log("Signal received in RightDrawer:", signal);
+    setSelections({})
 
+    // You can perform actions based on the new signal here
+  }, [signal]);
 
     useEffect(() => {
       // console.log(selections,data)

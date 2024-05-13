@@ -49,7 +49,7 @@ const RetentionPolicyPopup = ({ bucketId }) => {
   const fetchCurrentRetention = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetchData(`/get-retention`, {
+      const response = await fetch(`https://localhost:8000/get-retention`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

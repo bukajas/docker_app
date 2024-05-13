@@ -60,6 +60,8 @@ const UsersPage = () => {
     };
     const hasAdminScope = scopes.includes('admin');
     const hasEmployeeScope = scopes.includes('employee');
+    const hasReadScope = scopes.includes('read');
+    const hasReadWriteScope = scopes.includes('read+write');
 
     {isAuthenticated && hasAdminScope && (
         <div>This is some admin-only content.</div>
@@ -120,6 +122,10 @@ const UsersPage = () => {
                                                 <MenuItem value="basic">Basic</MenuItem>
                                                 <MenuItem value="employee">Employee</MenuItem>
                                                 <MenuItem value="admin">Admin</MenuItem>
+                                                <MenuItem value="noright">No Right</MenuItem>
+                                                <MenuItem value="read">Read</MenuItem>
+                                                <MenuItem value="read+write">Read and Write</MenuItem>
+
                                             </Select>
                                         </TableCell>
                                     </TableRow>
