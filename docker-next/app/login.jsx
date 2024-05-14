@@ -35,20 +35,6 @@ function Login() {
     setOpen(false); // Close the dialog on logout
   };
 
-  const fetchSecureMessage = async () => {
-    try {
-      const { token } = useContext(AuthContext);
-      const response = await axios.get('https://localhost:8000/secure-endpoint', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setMessage(response.data.message);
-    } catch (error) {
-      console.error('Error fetching secure message:', error);
-      alert('Failed to fetch secure message. Make sure you are logged in.');
-    }
-  };
 
   const theme = createTheme({
     palette: {
@@ -61,8 +47,6 @@ function Login() {
     },
   });
   const hasAdminScope = scopes.includes('admin');
-  const hasEmployeeScope = scopes.includes('employee');
-  const hasBasicScope = scopes.includes('basic');
   const hasNorightcope = scopes.includes('noright');
   const hasReadScope = scopes.includes('read');
   const hasReadWriteScope = scopes.includes('read+write');
@@ -78,9 +62,9 @@ function Login() {
           {isAuthenticated ? `Logged in as ${storedUsername}` : "Login / Check Status"}
       </Button>
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{hasAdminScope || hasEmployeeScope || hasBasicScope ? "Logged In" : "Login"}</DialogTitle>
+        <DialogTitle>{hasAdminScope || hasReadScope || hasReadWriteScope || hasNorightcope ? "Logged In" : "Login"}</DialogTitle>
         <DialogContent>
-          {!hasEmployeeScope && !hasAdminScope && !hasBasicScope ? (
+          {!hasAdminScope && !hasNorightcope && !hasReadScope && !hasReadWriteScope ? (
             <form onSubmit={handleLogin}>
               <TextField
                 margin="dense"
@@ -113,7 +97,7 @@ function Login() {
             <div>
               <p>Welcome, {username}!</p>
               <Button onClick={handleLogout}>Logout</Button>
-              <Button onClick={fetchSecureMessage}>Fetch Secure Message</Button>
+
               {message && <p>{message}</p>}
             </div>
           )}

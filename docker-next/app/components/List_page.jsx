@@ -7,8 +7,8 @@ const DrawerItems = ({ setActiveComponent }) => {
     const { scopes,isAuthenticated } = useContext(AuthContext); // Use useContext to access the current authentication context
 
     const hasAdminScope = scopes.includes('admin');
-    const hasEmployeeScope = scopes.includes('employee');
-    const hasBasicScope = scopes.includes('basic');
+    const hasReadScope = scopes.includes('read');
+    const hasReadWriteScope = scopes.includes('read+write');
 
 
   return (
@@ -16,27 +16,27 @@ const DrawerItems = ({ setActiveComponent }) => {
       <ListItem button onClick={() => setActiveComponent('default')}>
         <ListItemText primary="Login / Show Default" />
       </ListItem>
-      {isAuthenticated && (hasAdminScope || hasEmployeeScope) && (
-      <ListItem button onClick={() => setActiveComponent('edit')}>
-        <ListItemText primary="Edit Data" />
-      </ListItem>
-        )}
-        {isAuthenticated && (hasAdminScope || hasEmployeeScope) && (
-      <ListItem button onClick={() => setActiveComponent('delete')}>
-        <ListItemText primary="Delete Data" />
-      </ListItem>
-        )}
-        {isAuthenticated && (hasAdminScope || hasEmployeeScope || hasBasicScope) && (
-      <ListItem button onClick={() => setActiveComponent('export')}>
-        <ListItemText primary="Export Data" />
-      </ListItem>
-        )}
-      {isAuthenticated && (hasAdminScope || hasEmployeeScope || hasBasicScope) && (
-      <ListItem button onClick={() => setActiveComponent('Graphs')}>
-        <ListItemText primary="Graphs" />
-      </ListItem>
+      {isAuthenticated && (hasReadWriteScope || hasAdminScope) && (
+        <ListItem button onClick={() => setActiveComponent('edit')}>
+          <ListItemText primary="Edit Data" />
+        </ListItem>
       )}
-      {/* You can add other list items here for additional actions */}
+      {isAuthenticated && (hasReadWriteScope || hasAdminScope) && (
+        <ListItem button onClick={() => setActiveComponent('delete')}>
+          <ListItemText primary="Delete Data" />
+        </ListItem>
+      )}
+      {isAuthenticated && (hasReadScope || hasReadWriteScope || hasAdminScope) && (
+        <ListItem button onClick={() => setActiveComponent('export')}>
+          <ListItemText primary="Export Data" />
+        </ListItem>
+      )}
+      {isAuthenticated && (hasReadScope || hasReadWriteScope || hasAdminScope) && (
+        <ListItem button onClick={() => setActiveComponent('Graphs')}>
+          <ListItemText primary="Graphs" />
+        </ListItem>
+      )}
+      {/* Add other list items for additional actions */}
     </List>
   );
 };

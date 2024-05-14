@@ -6,7 +6,6 @@ import axios from 'axios';
 import '../styles.css';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { AuthContext } from './context/AuthContext';  // Make sure the path matches where the AuthContext is defined
-import { fetchData } from './utils/fetchData';
 
 const Register = () => {
     const [open, setOpen] = useState(false);
@@ -64,29 +63,16 @@ const Register = () => {
 
 
     const hasAdminScope = scopes.includes('admin');
-    const hasEmployeeScope = scopes.includes('employee');
-    const hasBasicScope = scopes.includes('basic');
+    const hasNorightcope = scopes.includes('noright');
+    const hasReadScope = scopes.includes('read');
+    const hasReadWriteScope = scopes.includes('read+write');
 
-
-    // {isAuthenticated && hasAdminScope && (
-    //     <div>This is some admin-only content.</div>
-    // )}
-    // {isAuthenticated && hasEmployeeScope && (
-    //     <div>This is some employee-only content.</div>
-    // )}
-    // if (!hasAdminScope && !hasEmployeeScope && !hasBasicScope) {
-    //     return (
-    //     <ThemeProvider theme={theme}>
-    //     <Button className="manage-users-button" variant="outlined" onClick={handleClickOpen}>Register</Button>
-    //     </ThemeProvider>
-    // )
-    // }
 
     return (
         <div>
             <ThemeProvider theme={theme}>
 
-            {(!hasAdminScope && !hasEmployeeScope && !hasBasicScope) && (
+            {(!hasAdminScope && !hasNorightcope && !hasReadScope && !hasReadWriteScope) && (
             <Button className="manage-users-button" variant="outlined" onClick={handleClickOpen}>
                 Register
             </Button>

@@ -2,44 +2,43 @@ import pandas as pd
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 import asyncio
-from dependencies import client
+from dependencies import client, INFLUXDB_AGRO_BUCKET, INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, ACCESS_TOKEN_EXPIRE_MINUTES
 from fastapi_utils.session import FastAPISessionMaker
 from fastapi_utils.tasks import repeat_every
 from fastapi import APIRouter
 import pytz
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 router = APIRouter()
 
 
-# Connection settings
-INFLUXDB_URL = "http://docker-influxdb:8086"
-INFLUXDB_ORG = "VUT"
-INFLUXDB_BUCKET = "school_data"
-INFLUXDB_TOKEN = "uSw9UaNW-cbxDFGV5mtHrXNR0wzp7pBo5J0jgRopYAkS183A7QEwGy91ME03SAgqEv2C-25RhhiT7qQsrP3ZSA=="
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
 
 client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
+buckets_api = client.buckets_api()
 
+
+def ensure_bucket_exists(bucket_name):
+    try:
+        buckets = buckets_api.find_buckets().buckets
+        if not any(bucket.name == bucket_name for bucket in buckets):
+            buckets_api.create_bucket(bucket_name=bucket_name, org=INFLUXDB_ORG)
+            # print(f"Bucket '{bucket_name}' created.")
+        # else:
+        #     print(f"Bucket '{bucket_name}' already exists.")
+    except Exception as e:
+        print("An unexpected error occurred while checking/creating the bucket:", e)
 
 async def read_last_timestamp():
     tz_cest = pytz.timezone('Europe/Berlin')
     tz_utc = pytz.timezone('UTC')
-    query = 'from(bucket: "test") |> range(start: -10m) |> last()'
+    query = f'from(bucket: "{INFLUXDB_AGRO_BUCKET}") |> range(start: -10m) |> last()'
     try:
-        # print("Executing query...")
         result1 = client.query_api().query(query, org=INFLUXDB_ORG)
-        # if result1:
-            # print("Query result:", result1)
-        # else:
-            # print("No data returned from the query.")
     except Exception as e:
         print("An unexpected error occurred:", e)
-    finally:
-        # Any cleanup or further logic can be handled here
-        print("Query execution completed.")
-        pass
+        result1 = []
 
 
     newest_timestamp = None
@@ -49,24 +48,32 @@ async def read_last_timestamp():
             record_time = record.get_time()
             if newest_timestamp is None or record_time > newest_timestamp:
                 newest_timestamp = record_time
+
     if newest_timestamp is not None:
         dt_utc = newest_timestamp.astimezone(tz_utc)
         formatted_timestamp = dt_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
     else:
         formatted_timestamp = None
-    now_utc = datetime.now(tz_utc)
-    formatted_now = now_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
-    start = formatted_timestamp if formatted_timestamp else formatted_now
-    end = formatted_now
-    # print(f"Start time: {start}")
-    # print(f"End time: {end}")
 
+    now_utc = datetime.now(tz_utc)
+
+    formatted_now = now_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+    if formatted_timestamp:
+        start = formatted_timestamp
+    else:
+        start = (now_utc - timedelta(seconds=10)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    # start = formatted_timestamp if formatted_timestamp else formatted_now
+    end = formatted_now
     query1 = f'''
     from(bucket: "{INFLUXDB_BUCKET}")
     |> range(start: {start}, stop: {end}) 
     |> yield()
     '''
-    result = client.query_api().query(query1, org=INFLUXDB_ORG)
+    try:
+        result = client.query_api().query(query1, org=INFLUXDB_ORG)
+    except Exception as e:
+        print("An unexpected error occurred while querying the second query:", e)
+        result = []
     test = []
     for table in result:
         for record in table.records:
@@ -94,9 +101,10 @@ async def read_last_timestamp():
                 point = point.tag(sublist[1],sublist[2])
         points.append(point)
 
+    ensure_bucket_exists(INFLUXDB_AGRO_BUCKET)
 
     write_api = client.write_api(write_options=SYNCHRONOUS)
-    write_api.write(bucket="test", org=INFLUXDB_ORG, record=[points])
+    write_api.write(bucket=INFLUXDB_AGRO_BUCKET, org=INFLUXDB_ORG, record=[points])
 
 
 

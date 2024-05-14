@@ -4,32 +4,17 @@ import {
   Typography,
   Button,
   Grid,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Paper,
-  FormControlLabel,
-  Switch,
-
 } from '@mui/material';
 import { Line,Bar } from 'react-chartjs-2';
-
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import DateTimeForm from '../components/Time_component_chart'
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import DynamicDropdownMenu from '../components/Selection_component'
 import dayjs from 'dayjs';
 import RightDrawer from '../components/Drawer_settings'
-import { constructNow, isLeapYear } from 'date-fns';
-import {stringToDictionary,aggregateDataDynamically} from '../components/Functions'
-import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/internals';
+import {stringToDictionary} from '../components/Functions'
 import ExportButton from '../export/export_image';
 import { Chart, registerables } from 'chart.js';
 import '../../styles.css';
-import { fetchData } from '../utils/fetchData';
 
 function convertDictToString(dict) {
   const keysToExclude = ['date', 'day', '_start', '_stop', '_time',"result","table","time","_value"];
@@ -214,6 +199,52 @@ function ChartComponent2({ measurementId, handleDelete }) {
     if (e) e.preventDefault();
     
     try {
+      // setSelectedDataKey([])
+      setRightDrawerSignal(new Date().getTime());  // You can pass any data here
+      setSelectionsFromDrawer([])
+      const body1 = {
+        data: combinedData,
+        start_time: startDateRef.current.format('YYYY-MM-DD HH:mm:ss'),
+        end_time: endDateRef.current.format('YYYY-MM-DD HH:mm:ss'),
+      }
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://localhost:8000/read_data_dynamic', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body1),
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      //TODO filter and save specific values
+      const sortedData = {};
+      Object.keys(responseData.data).forEach((key) => {
+        // Sort the list for the current key based on the _time field
+        sortedData[key] = responseData.data[key].sort((a, b) => {
+          return new Date(a._time) - new Date(b._time);
+        });
+      });
+        setData(sortedData);
+        const keys = Object.keys(responseData.data);
+        setDataKeys(keys);
+        // setSelectionsFromDrawer(keys)
+        setCurrentTime(dayjs());
+
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    }
+  };
+
+
+  const handleSubmit2 = async (e) => {
+    if (e) e.preventDefault();
+    
+    try {
       setSelectedDataKey([])
       setRightDrawerSignal(new Date().getTime());  // You can pass any data here
       setSelectionsFromDrawer([])
@@ -256,8 +287,12 @@ function ChartComponent2({ measurementId, handleDelete }) {
     }
   };
 
+
+
+
+
+
   const handleDataKeyToggle = (value) => {
-    console.log(value)
     setSelectedDataKey(value);
   };
 
@@ -334,10 +369,9 @@ const handleSelectionsChange = (newSelections) => {
       }
     }
   });
-  console.log(newSelections,matchedDicts)
   
   setSelectionsFromDrawer(matchedDicts)
-  setSelectedDataKey([]);
+  // setSelectedDataKey([]);
 };
 
 
@@ -469,7 +503,7 @@ return (
         <p>Select measurement and submit</p>
         </Grid>
         <Grid item>
-      <Button className="custom-button"type="submit" variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleSubmit}>
+      <Button className="custom-button"type="submit" variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleSubmit2}>
           Submit
         </Button>
         </Grid>

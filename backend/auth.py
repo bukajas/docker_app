@@ -21,7 +21,7 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
-    scopes={"basic": "basic no permisions", "admin": "all permisions", "employee": "almost all","noright":"no rights", "read": "can read data not edit", "read+write": "can read and edit data"},
+    scopes={"admin": "all permisions","noright":"no rights", "read": "can read data not edit", "read+write": "can read and edit data"},
 )
 
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@docker-mysql/auth_users"
@@ -91,6 +91,12 @@ async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str
     if user is None:
         raise credentials_exception
     for scope in security_scopes.scopes:
+        # print(scope)
+        # print(token_data.scopes)
+        # if scope in token_data.scopes:
+        #     return user
+        # else:
+        #     continue
         if scope not in token_data.scopes:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

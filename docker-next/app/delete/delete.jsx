@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { MenuItem, TextField, Button, FormControl, InputLabel, Select, Box, RadioGroup, FormControlLabel, Radio, Grid, Switch } from '@mui/material';
 import DynamicDropdownMenu from '../components/Selection_component'
 import dayjs from 'dayjs';
-import RightDrawer from '../components/Drawer_settings'
+
 import DateTimeForm from '../components/Time_component'
-import { fetchData } from '../utils/fetchData';
 
 
 const DeleteDataForm = () => {
@@ -39,7 +38,7 @@ const DeleteDataForm = () => {
       end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
     };
     try {
-      const response = await fetchData(apiUrl, {
+      const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

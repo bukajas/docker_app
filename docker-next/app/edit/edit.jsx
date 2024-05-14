@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Box,
   Typography,
@@ -21,7 +20,6 @@ import dayjs from 'dayjs';
 import DateTimeForm from '../components/Time_component'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import '../../styles.css';
-import { fetchData } from '../utils/fetchData';
 
 
 const sortDataByTime = (data) => {
@@ -104,7 +102,7 @@ const DataEditor = () => {
         end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
       }
       const token = localStorage.getItem('token');
-      const response = await fetchData('/modify_data_read', {
+      const response = await fetch('https://localhost:8000/modify_data_read', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -158,7 +156,7 @@ const handleDelete = async (index) => {
     };
     try {
       const token = localStorage.getItem('token');
-      const response = await fetchData('/modify_data_delete', {
+      const response = await fetch('https://localhost:8000/modify_data_delete', {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -211,7 +209,7 @@ const handleDelete = async (index) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://127.0.0.1:8000/modify_data_update', {
+      const response = await fetch('https://localhost:8000/modify_data_update', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -287,10 +285,6 @@ const theme = createTheme({
     },
   },
 });
-// const hasAdminScope = scopes.includes('admin');
-// const hasEmployeeScope = scopes.includes('employee');
-// const hasBasicScope = scopes.includes('basic');
-
 
 return (
   <div>

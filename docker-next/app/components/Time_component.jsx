@@ -14,7 +14,7 @@ dayjs.locale('en');
 function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, initialEndDate,currentTime }) {
   const [startDate, setStartDate] = React.useState(dayjs().subtract(1, 'minute')); 
   const [endDate, setEndDate] = React.useState(dayjs());
-  const [range, setRange] = React.useState(1);
+  const [range, setRange] = React.useState(0);
   const [rangeUnit, setRangeUnit] = React.useState('minutes');
   const [mode, setMode] = React.useState('relative');
 
@@ -80,7 +80,7 @@ function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, in
             <Grid item xs={12} sm={6}>
               <DateTimePicker
                 label="Start Date and Time"
-                value={startDate}
+                // value={startDate}
                 onChange={(newStartDate) => updateDates(newStartDate, endDate)}
                 renderInput={(params) => <TextField {...params} />}
                 ampm={false}
@@ -91,7 +91,7 @@ function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, in
             <Grid item xs={12} sm={6}>
               <DateTimePicker
                 label="End Date and Time"
-                value={endDate}
+                // value={endDate}
                 onChange={(newEndDate) => updateDates(startDate, newEndDate)}
                 renderInput={(params) => <TextField {...params} />}
                 ampm={false}
@@ -110,6 +110,7 @@ function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, in
                 type="number"
                 value={range}
                 onChange={handleRangeChange}
+                inputProps={{ min: 0 }}
                 sx={{ mt: 2 }}
               />
             </Grid>

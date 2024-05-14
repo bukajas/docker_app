@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ChartComponent2 from './new_chart'; // Adjust the path as necessary
-import { Button, SpeedDial, SpeedDialIcon, SpeedDialAction } from '@mui/material';
+import { Button, SpeedDial } from '@mui/material';
 // import AddIcon from '@mui/icons-material/Add'; // Icon for the speed dial
 import '../../styles.css';
 

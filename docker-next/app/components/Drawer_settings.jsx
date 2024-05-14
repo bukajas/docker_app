@@ -35,7 +35,6 @@ function RightDrawer({data, onSelectionsChange, signal}) {
 
   useEffect(() => {
     // Code to run when signal changes
-    console.log("Signal received in RightDrawer:", signal);
     setSelections({})
 
     // You can perform actions based on the new signal here

@@ -20,7 +20,7 @@ router = APIRouter()
 @router.delete("/delete_data", tags=["Delete"])
 async def delete_data_from_database(
     request_body: DeleteDataRequest, 
-    current_user: Annotated[models.User, Security(auth.get_current_active_user)],
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write"],
 ):
     delete_api = client.delete_api()
     formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(request_body.start_time)

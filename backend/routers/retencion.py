@@ -11,11 +11,6 @@ import models, auth, schemas
 
 router = APIRouter()
 
-# Replace these with your actual credentials and settings
-# url = "http://localhost:8086"
-# token = "your-token"
-# org = "your-org"
-
 
 
 def get_bucket_by_name() -> str:
@@ -39,8 +34,8 @@ def parse_duration_to_seconds(duration: str) -> int:
     return value * units[unit]
 
 
-@router.get("/get-retention")
-async def get_retention(current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],):
+@router.get("/get-retention", tags=["Retencion"])
+async def get_retention(current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     bucket = get_bucket_by_name()
     if bucket:
         retention_seconds = bucket.retention_rules[0].every_seconds
@@ -49,9 +44,10 @@ async def get_retention(current_user: Annotated[models.User, Security(auth.get_c
 
 class RetentionPolicy(BaseModel):
     retention: str
+# async def update_retention(data: RetentionPolicy, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],):
 
-@router.post("/update-retention")
-async def update_retention(data: RetentionPolicy, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],):
+@router.post("/update-retention", tags=["Retencion"])
+async def update_retention(data: RetentionPolicy, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
     bucket = get_bucket_by_name()
     try:
         retention_seconds = parse_duration_to_seconds(data.retention)
@@ -76,23 +72,3 @@ async def update_retention(data: RetentionPolicy, current_user: Annotated[models
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
-
-
-@router.get("/bucket_retention_policy")
-def get_bucket_retention_policy():
-    try:
-        # client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
-        buckets_api = client.buckets_api()
-        buckets = buckets_api.find_buckets().buckets
-        for bucket in buckets:
-            # print(f"Bucket Name: {bucket.name}")
-            # print(f"Retention Policy: {bucket.retention_rules}")  # This shows the retention settings
-
-            if bucket.name == INFLUXDB_BUCKET:
-                return bucket.retention_rules
-
-        return {"hello": "world"}
-    except Exception as e:
-        return {"error": f"Failed to fetch retention policy: {str(e)}"}

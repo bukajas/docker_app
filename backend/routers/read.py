@@ -25,31 +25,10 @@ class ReadData(BaseModel):
 # TODO read data but manage so that there isnt same data fetched twice, so to save bandwidth
 # TODO the data needs to have field or tag that specifies which protocos it is.
 # TODO neco todo
-@router.post("/read_data", tags=["Read"])
-async def read_data(readData: ReadData, current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):  
-    try:
-        # Assuming INFLUXDB_BUCKET and client are defined elsewhere
-        query = f'from(bucket: "{INFLUXDB_BUCKET}") |> range(start: -{readData.range}m) |> filter(fn: (r) => r["_measurement"] == "{readData.dataType}") |> filter(fn: (r) => r["_field"] == "{readData.data}")'
-        # Adding filters for slaveId, masterId, and modbusType
-        query += f' |> filter(fn: (r) => r["slaveID"] == "{readData.slaveId}") |> filter(fn: (r) => r["masterID"] == "{readData.masterId}") |> filter(fn: (r) => r["modbusType"] == "{readData.modbusType}")'
-        
-        tables = client.query_api().query(query)
-        # Extract data values from the query result
-        data = []
-        for table in tables:
-            for record in table.records:
-                data.append({"time": record.get_time().isoformat(), "value": record.get_value(), "field": record.get_field()})
-                
-        return {"data": data}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-
 @router.post("/read_data_dynamic", tags=["Read"])
 async def read_data_dynamic(
     readData: schemas.DynamicReadData,
-    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write","read"]):
     try:
         formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(readData.start_time)
         formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(readData.end_time)

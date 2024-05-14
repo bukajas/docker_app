@@ -3,7 +3,7 @@ import models, auth, schemas
 from typing import Annotated
 import pytz
 from datetime import datetime
-from dependencies import INFLUXDB_BUCKET, INFLUXDB_ORG, INFLUXDB_URL, INFLUXDB_TOKEN
+from dependencies import INFLUXDB_ORG, INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_AGRO_BUCKET
 from dependencies import client as clientt
 from influxdb_client import InfluxDBClient
 from io import StringIO
@@ -16,24 +16,21 @@ router = APIRouter()
 
 
 
-
-
-
 @router.post("/agregate", tags=["Agregate"])
 async def agregate(
     export_request: schemas.AgregateDataRequest,
-    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write","read"],
     ): 
     formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(export_request.start_time)
     formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(export_request.end_time)
     flux_query = f'''
-    from(bucket: "{INFLUXDB_BUCKET}")
+    from(bucket: "{INFLUXDB_AGRO_BUCKET}")
     |> range(start: {formatted_timestamp_start}, stop: {formatted_timestamp_end}) 
     |> drop(columns: ["_result", "_field", "table"])
     |> group()
     |> yield()
     '''
-    # print(flux_query)
+    
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
 
         results = client.query_api().query_data_frame(query=flux_query, org=INFLUXDB_ORG)

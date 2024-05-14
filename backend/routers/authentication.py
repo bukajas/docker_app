@@ -36,7 +36,6 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 #! TODO admin can change users roles
 @router.post("/register",response_model=schemas.UserInDB, tags=["authentication"])
 def register_user( user: schemas.UserCreate, db: Session = Depends(auth.get_db), ):
-    print("test")
     # Check if the username already exists
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
@@ -67,8 +66,3 @@ def login(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-
-@router.get("/secure-endpoint", tags=["authentication"])
-async def secure_endpoint(current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"]):
-    # Here you can use current_user directly as it is already authenticated
-    return {"message": "Secure Information", "user": current_user}

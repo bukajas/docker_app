@@ -1,6 +1,6 @@
 // components/RetentionPolicyPopup.jsx
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -11,7 +11,7 @@ import { AuthContext } from '../context/AuthContext';  // Make sure the path mat
 import '../../styles.css';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-import { fetchData } from '../utils/fetchData';
+
 
 
 const RetentionPolicyPopup = ({ bucketId }) => {
@@ -34,14 +34,6 @@ const RetentionPolicyPopup = ({ bucketId }) => {
   };
 
   const hasAdminScope = scopes.includes('admin');
-    const hasEmployeeScope = scopes.includes('employee');
-
-    {isAuthenticated && hasAdminScope && (
-        <div>This is some admin-only content.</div>
-    )}
-    {isAuthenticated && hasEmployeeScope && (
-        <div>This is some employee-only content.</div>
-    )}
     if (!hasAdminScope) {
         return <div></div>;
     }

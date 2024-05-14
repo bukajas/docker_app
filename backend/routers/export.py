@@ -22,7 +22,7 @@ router = APIRouter()
 @router.post("/export_csv", tags=["Export"])
 async def export_csv(
     export_request: schemas.ExportDataRequest,
-    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"],
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write","read"],
     ): 
     formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(export_request.start_time)
     formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(export_request.end_time)

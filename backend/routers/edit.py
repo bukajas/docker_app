@@ -28,7 +28,7 @@ router = APIRouter()
 @router.post("/modify_data_read", tags=["Modify"])
 async def modify_data_read(
     request_body: schemas.EditReadDataRequest, 
-    current_user: Annotated[models.User, Depends(auth.get_current_active_user)], 
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write"], 
     # If 'admin' scope is required, ensure your authentication logic handles it
 ):
     try:
@@ -72,8 +72,7 @@ async def modify_data_read(
 @router.post("/modify_data_update", tags=["Modify"])
 async def modify_data_update(
     update_request: schemas.EditUpdateDataRequest, 
-    current_user: Annotated[models.User, Security(auth.get_current_active_user)], 
-    scopes=["admin"]):
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write"]):
     try:
         if update_request.time is None:
             raise HTTPException(status_code=400, detail="Time parameter is missing.")
@@ -127,8 +126,7 @@ async def modify_data_update(
 @router.delete("/modify_data_delete", tags=["Modify"])
 async def modify_data_delete(
     delete_request: schemas.EditDeleteDataRequest, 
-    current_user: Annotated[models.User, Security(auth.get_current_active_user)], 
-    scopes=["admin"]
+    current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write"]
 ):    
     try:
         if delete_request.time is None:

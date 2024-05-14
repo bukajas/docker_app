@@ -7,7 +7,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True)
     hashed_password = Column(String(255))
-    role = Column(String(50), default='basic')  # New role column
+    role = Column(String(50), default='noright')  # New role column
 
 class UserList(Base):
     __tablename__ = "users"  # Ensure this matches your table name in MySQL

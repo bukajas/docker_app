@@ -44,12 +44,12 @@ const DataExportForm2 = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    exportData('https://127.0.0.1:8000/export_csv');
+    exportData('https://localhost:8000/export_csv');
   };
 
   const handleAggregate = async (e) => {
     e.preventDefault();
-    exportData('https://127.0.0.1:8000/agregate');
+    exportData('https://localhost:8000/agregate');
   };
 
  const exportData = async (apiUrl) => {
@@ -60,6 +60,7 @@ const DataExportForm2 = () => {
         end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
       }
       const token = localStorage.getItem('token');
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {

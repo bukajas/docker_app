@@ -8,7 +8,7 @@ import Collapse from '@mui/material/Collapse';
 import moment from 'moment';
 
 export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate }) {
-  const [data, setData] = useState({ measurements_with_tags: {} });
+  const [data, setData] = useState({});
   const [checkedCategories, setCheckedCategories] = useState({});
   const [tagValues, setTagValues] = useState({});
   const [selectedTab, setSelectedTab] = useState(0);
@@ -25,7 +25,6 @@ export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate })
       if (!startMoment.isValid() || !endMoment.isValid() || startMoment.isAfter(endMoment) || startDate.isSame(endDate)) {
         return;
       }
-
 
       const response = await fetch(`https://localhost:8000/filtered_measurements_with_tags?start=${startDate.format('YYYY-MM-DD HH:mm:ss')}&end=${endDate.format('YYYY-MM-DD HH:mm:ss')}`, {
         headers: {

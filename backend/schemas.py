@@ -25,7 +25,7 @@ class EditDeleteDataRequest(BaseModel):
     time: Optional[datetime] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "measurement": "coil_list",
                 "tag_filters": {"unit": "1"},
@@ -39,7 +39,7 @@ class EditUpdateDataRequest(BaseModel):
     new_value: float
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "measurement": "coil_list",
                 "tag_filters": {"unit": "1"},
@@ -68,7 +68,7 @@ class ReadDataRequest(BaseModel):
     stop_time: Optional[datetime] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "measurement": "coil_list",
                 "tags": {"unit": "1"},
@@ -107,7 +107,7 @@ class UserDisplay(BaseModel):
     role: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
@@ -128,7 +128,7 @@ class RoleUpdate(BaseModel):
 
     @validator('new_role')
     def validate_new_role(cls, value):
-        allowed_roles = ["basic", "employee", "admin"]
+        allowed_roles = ["admin", "noright", "read", "read+write"]
         if value not in allowed_roles:
             raise ValueError(f"Role must be one of {allowed_roles}")
         return value    
