@@ -21,6 +21,7 @@ const UsersPage = () => {
             });
             if (!response.ok) throw new Error('Failed to fetch');
             const data = await response.json();
+            console.log(data)
             setUsers(data);
         } catch (error) {
             console.error('Failed to fetch users', error);
@@ -118,6 +119,8 @@ const UsersPage = () => {
                                     <TableRow>
                                         <TableCell>ID</TableCell>
                                         <TableCell>Username</TableCell>
+                                        <TableCell>Email</TableCell>
+                                        <TableCell>Full Name</TableCell>
                                         <TableCell align="right">Role</TableCell>
                                         <TableCell align="right">Actions</TableCell>
                                     </TableRow>
@@ -129,6 +132,8 @@ const UsersPage = () => {
                                                 {user.id}
                                             </TableCell>
                                             <TableCell>{user.username}</TableCell>
+                                            <TableCell>{user.email}</TableCell>
+                                            <TableCell>{user.full_name}</TableCell>
                                             <TableCell align="right">
                                                 <Select
                                                     value={user.role}
@@ -142,7 +147,7 @@ const UsersPage = () => {
                                             </TableCell>
                                             <TableCell align="right">
                                                 <Button 
-                                                className="export-button2"
+                                                    className="export-button2"
                                                     variant="contained" 
                                                     color="secondary" 
                                                     onClick={() => handleDeleteUser(user.id)}

@@ -94,8 +94,20 @@ class UserCreate(BaseModel):
     email: str
     full_name: str
 
+
 class UserInDB(BaseModel):
     hashed_password: str
+
+
+class UserInDB2(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: str
+    role: str
+
+    class Config:
+        from_attributes = True
 
 class UserRoleUpdate(BaseModel):
     username: str
@@ -105,6 +117,14 @@ class UserDisplay(BaseModel):
     id: int
     username: str
     role: str
+
+class UserDisplay2(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: str
+    role: str    
+
 
     class Config:
         from_attributes = True

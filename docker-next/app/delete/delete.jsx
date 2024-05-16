@@ -29,7 +29,7 @@ const DeleteDataForm = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const token = localStorage.getItem('token');
+    
     const apiUrl = 'https://127.0.0.1:8000/delete_data';
     // Combine date and time for start and end times
     const body = {
@@ -37,8 +37,10 @@ const DeleteDataForm = () => {
       start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
       end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
     };
+    console.log(JSON.stringify(body))
     try {
-      const response = await fetch(apiUrl, {
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://localhost:8000/delete_data', {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -8,9 +8,10 @@ router = APIRouter()
 
 
 @router.get("/users", response_model=List[schemas.UserDisplay], tags=["Users"])
-def read_users( current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"], 
+def read_users(
     db: Session = Depends(auth.get_db), ):
     users = db.query(models.UserList).all()
+
     return users
 
 
@@ -20,8 +21,6 @@ def update_user_role(
     role_update: schemas.RoleUpdate,  # Use the RoleUpdate model for input validation
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"], 
     db: Session = Depends(auth.get_db),
-    
-
 ):
      # Fetch the user to update from the DB
     user_to_update = db.query(models.User).filter(models.User.id == user_id).first()

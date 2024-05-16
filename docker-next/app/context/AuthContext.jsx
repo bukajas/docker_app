@@ -43,8 +43,12 @@ export const AuthProvider = ({ children }) => {
             const currentTime = new Date().getTime();
             const expireTime = decoded.exp * 1000;
             const isExpired = expireTime < currentTime;
+            console.log(expireTime)
+            console.log(currentTime)
+            console.log(isExpired)
 
             if (!isExpired) {
+                
                 localStorage.setItem('token', newToken);
                 localStorage.setItem('username', newUser);
                 setAuthState({
@@ -53,13 +57,14 @@ export const AuthProvider = ({ children }) => {
                     username: newUser,
                     isAuthenticated: true
                 });
-
+                
                 const timeout = setTimeout(() => {
                     updateAuth(null, '');
                 }, expireTime - currentTime);
-
+                
                 return () => clearTimeout(timeout);
             } else {
+                
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');
                 setAuthState({ token: null, scopes: [], username: '', isAuthenticated: false });

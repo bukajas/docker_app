@@ -30,15 +30,18 @@ async def read_data_dynamic(
     readData: schemas.DynamicReadData,
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write","read"]):
     try:
+
         formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(readData.start_time)
         formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(readData.end_time)
         flux_query = Functions.generate_flux_query(readData.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
-        print(readData.start_time)
+
         tables = client.query_api().query(flux_query)
         data = []
         for table in tables:
             for record in table.records:
                 # Convert the record to a dictionary, including all details
+                record_dict = {key: getattr(record, key) for key in dir(record) if not key.startswith('_')}
+                
                 record_dict = record.values
                 record_dict['time'] = record.get_time().isoformat() if record.get_time() else None
                 data.append(record_dict)

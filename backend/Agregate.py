@@ -44,7 +44,6 @@ async def read_last_timestamp():
     newest_timestamp = None
     for table in result1:
         for record in table.records:
-            # print(record.get_time())
             record_time = record.get_time()
             if newest_timestamp is None or record_time > newest_timestamp:
                 newest_timestamp = record_time
@@ -82,7 +81,7 @@ async def read_last_timestamp():
             for tag_key, tag_value in record.values.items():
                 if tag_key == "_measurement":
                     a = f"{tag_value};" + a
-                if tag_key not in ["_time", "_measurement", "_field","result", "table", "_start", "_stop", "_value"]:
+                if tag_key not in ["_time", "_measurement","result", "table", "_start", "_stop", "_value"]:
                     a += (f"{tag_key}={tag_value};")
             test.append([record.get_time().replace(microsecond=0),a,record.get_value()])
 

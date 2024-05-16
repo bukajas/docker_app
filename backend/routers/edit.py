@@ -8,7 +8,7 @@ from dependencies import client, INFLUXDB_ORG, INFLUXDB_BUCKET
 from fastapi import APIRouter
 import Time_functions
 import Functions
-
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 router = APIRouter()
 
@@ -35,7 +35,7 @@ async def modify_data_read(
         formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(request_body.start_time)
         formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(request_body.end_time)
         flux_query = Functions.generate_flux_query(request_body.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
-
+        
         tables = client.query_api().query(flux_query)
         # Extract data values from the query result
         data = []
@@ -88,14 +88,44 @@ async def modify_data_update(
         start_str = start_time.isoformat()
         end_str = end_time.isoformat()
 
+        query_api = client.query_api()
+        write_api = client.write_api()
+
+        delete_api = client.delete_api()
+
+
+        # Construct the query to fetch existing data
+        query = f'''
+        from(bucket: "{INFLUXDB_BUCKET}")
+          |> range(start: {start_str}, stop: {end_str})
+          |> filter(fn: (r) => r._measurement == "{update_request.measurement}")
+        '''
+        for tag, value in update_request.tag_filters.items():
+            if tag == "_field":
+                continue
+            query += f' |> filter(fn: (r) => r.{tag} == "{value}")'
+        # print(query)
+
+
+        result = query_api.query(org=INFLUXDB_ORG, query=query)
+        records_to_keep = []
+        for table in result:
+            for record in table.records:
+                # Keep the records that you don't want to delete
+                if record.get_field() != update_request.tag_filters["_field"]:  # Adjust this condition as needed
+
+                    records_to_keep.append(record)
+
+
+
         # ! Here delete data and than write them.
         # Write the modified data back to InfluxDB
-        write_api = client.write_api()
+        # print(update_request)
 
         predicate = f'_measurement="{update_request.measurement}"'
 
         for tag, value in update_request.tag_filters.items():
-            if tag == "field":
+            if tag == "_field":
                 continue
             predicate += f' AND {tag}="{value}"'
         # Use the delete API from your client
@@ -107,15 +137,31 @@ async def modify_data_update(
             bucket=INFLUXDB_BUCKET,
             org=INFLUXDB_ORG
         )
-        point = Point(update_request.measurement)\
-                .field("_value", update_request.new_value)\
-                .time(update_request.time)
-        # Dynamically add tags to the point
+
+        points = []
+        for record in records_to_keep:
+            point = Point(record.get_measurement()).time(record.get_time())
+            for tag in record.values:
+                if tag.startswith('_'):
+                    continue
+                point.tag(tag, record.values[tag])
+            point.field(record.get_field(), record.get_value())
+            points.append(point)
+
+
+        # Update the specific field in a new data point
+        new_point = Point(update_request.measurement).time(update_request.time)
         for tag, value in update_request.tag_filters.items():
-            point.tag(tag, value)
+            if tag == "_field":
+                new_point.field(value, update_request.new_value)
+            else:
+                new_point.tag(tag, value)
+
+        points.append(new_point)
+
         
         # print(point)
-        write_api.write(bucket=INFLUXDB_BUCKET, record=point)
+        write_api.write(bucket=INFLUXDB_BUCKET, record=points)
 
         return {"message": "Data updated successfully."}
     except Exception as e:
@@ -135,21 +181,47 @@ async def modify_data_delete(
         # Assuming you want to delete data from a range starting X minutes before the provided time
         end_time = delete_request.time + timedelta(seconds=.5)
         start_time = end_time - timedelta(seconds=.5)  # For example, 5 minutes before end_time
-
         # Ensure timezone is UTC for consistency
         start_time = start_time.replace(tzinfo=pytz.UTC)
         end_time = end_time.replace(tzinfo=pytz.UTC)
-
         start_str = start_time.isoformat()
         end_str = end_time.isoformat()
+
+
+        query_api = client.query_api()
+        write_api = client.write_api()
+        delete_api = client.delete_api()
+
+
+        # Construct the query to fetch existing data
+        query = f'''
+        from(bucket: "{INFLUXDB_BUCKET}")
+          |> range(start: {start_str}, stop: {end_str})
+          |> filter(fn: (r) => r._measurement == "{delete_request.measurement}")
+        '''
+        for tag, value in delete_request.tag_filters.items():
+            if tag == "_field":
+                continue
+            query += f' |> filter(fn: (r) => r.{tag} == "{value}")'
+        # print(query)
+
+
+        result = query_api.query(org=INFLUXDB_ORG, query=query)
+        records_to_keep = []
+        for table in result:
+            for record in table.records:
+                # Keep the records that you don't want to delete
+                if record.get_field() != delete_request.tag_filters["_field"]:  # Adjust this condition as needed
+                    records_to_keep.append(record)
 
         # Construct the predicate string based on the tag_filters and measurement
         predicate = f'_measurement="{delete_request.measurement}"'
 
         for tag, value in delete_request.tag_filters.items():
-            if tag == "field":
+            if tag == "_field":
                 continue
             predicate += f' AND {tag}="{value}"'
+
         # Use the delete API from your client
         delete_api = client.delete_api()
         delete_api.delete(
@@ -159,6 +231,18 @@ async def modify_data_delete(
             bucket=INFLUXDB_BUCKET,
             org=INFLUXDB_ORG
         )
+
+        points = []
+        for record in records_to_keep:
+            point = Point(record.get_measurement()).time(record.get_time())
+            for tag in record.values:
+                if tag.startswith('_'):
+                    continue
+                point.tag(tag, record.values[tag])
+            point.field(record.get_field(), record.get_value())
+            points.append(point)
+ 
+        write_api.write(bucket=INFLUXDB_BUCKET, record=points)
 
         return {"message": "Data deleted successfully"}
     except Exception as e:

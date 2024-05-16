@@ -21,17 +21,14 @@ import DateTimeForm from '../components/Time_component'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import '../../styles.css';
 
-
 const sortDataByTime = (data) => {
-
   // Iterate over each measurement list
   for (const measurement in data) {
-      // Sort the measurement list by time
-      data[measurement].sort((a, b) => new Date(a.time) - new Date(b.time));
+    // Sort the measurement list by time
+    data[measurement].sort((a, b) => new Date(a.time) - new Date(b.time));
   }
-  
   return data;
-}
+};
 
 const DataEditor = () => {
   const [measurements, setMeasurements] = useState({});
@@ -48,43 +45,41 @@ const DataEditor = () => {
   const [combinedData, setCombinedData] = useState({})
   const [currentTime, setCurrentTime] = useState(dayjs());
   const [currentMeasurement, setCurrentMeasurement] = useState(null);
-  const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false)
+  const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
 
   const handleMeasurementChange = (measurement) => {
     setCurrentMeasurement(measurement);
   };
 
-
   const formatDataList = (dataList) => {
     // Check if dataList is an object
     if (typeof dataList !== 'object' || Array.isArray(dataList)) {
-        console.error("Error: dataList is not an object.");
-        return {};
+      console.error("Error: dataList is not an object.");
+      return {};
     }
 
-    const excludedKeys = ['field', 'result', 'table', '_field'];
+    const excludedKeys = ['field', 'result', 'table'];
 
     const formattedData = {};
 
     // Iterate over each measurement list in the dataList
     for (const measurement in dataList) {
-        const measurementData = dataList[measurement];
-        // Apply the format operation to each measurement list
-        formattedData[measurement] = measurementData.map(item => {
-            const newItem = {};
+      const measurementData = dataList[measurement];
+      // Apply the format operation to each measurement list
+      formattedData[measurement] = measurementData.map(item => {
+        const newItem = {};
 
-            // Copy over key-value pairs excluding excludedKeys
-            Object.keys(item).forEach((key) => {
-                if (!excludedKeys.includes(key)) {
-                    newItem[key] = item[key];
-                }
-            });
-            return newItem;
+        // Copy over key-value pairs excluding excludedKeys
+        Object.keys(item).forEach((key) => {
+          if (!excludedKeys.includes(key)) {
+            newItem[key] = item[key];
+          }
         });
+        return newItem;
+      });
     }
     return formattedData;
-};
-
+  };
 
   useEffect(() => {
     if (fromTime && toTime || range) {
@@ -100,7 +95,7 @@ const DataEditor = () => {
         data: combinedData,
         start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
         end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
-      }
+      };
       const token = localStorage.getItem('token');
       const response = await fetch('https://localhost:8000/modify_data_read', {
         method: 'POST',
@@ -117,31 +112,25 @@ const DataEditor = () => {
       const responseData = await response.json();
 
       const sortedData = sortDataByTime(responseData);
-
-     
       const formattedList = formatDataList(sortedData);
-      console.log(formattedList)
+      console.log(formattedList);
       setData(formattedList);
-      if (currentMeasurement){
-        const cur = currentMeasurement
-        setCurrentMeasurement(cur)
-      }
-      else{
-        setCurrentMeasurement(Object.keys(formattedList)[0])
+      if (currentMeasurement) {
+        const cur = currentMeasurement;
+        setCurrentMeasurement(cur);
+      } else {
+        setCurrentMeasurement(Object.keys(formattedList)[0]);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
   };
 
-
-  // TODO time formating seems to be the problem
-  
-const handleDelete = async (index) => {
-  const item = data[index-1]
+  const handleDelete = async (index) => {
+    const item = data[index - 1];
 
     // Construct your request payload using the selectedMeasurement, rangeInMinutes, and tagFilters
-    const excludedKeys = ['_measurement', '_field', 'result', 'time', 'table', "value"];
+    const excludedKeys = ['_measurement', 'result', 'time', 'table', "value"];
     const result = {};
 
     Object.keys(index).forEach(key => {
@@ -171,11 +160,8 @@ const handleDelete = async (index) => {
     }
   };
 
-
-
-
   const handleUpdate = async (index) => {
-    console.log(index,editIndex,data[currentMeasurement],selectedMeasurement,currentMeasurement)
+    console.log(index, editIndex, data[currentMeasurement], selectedMeasurement, currentMeasurement);
 
     if (editIndex === null) {
       console.error("No item selected for update");
@@ -188,16 +174,16 @@ const handleDelete = async (index) => {
       console.error("Invalid item selected");
       return;
     }
-    const excludedKeys = ['_measurement', "_field", 'result', 'time',"table", "value"];
+    const excludedKeys = ['_measurement', 'result', 'time', "table", "value"];
     const result = {};
 
     Object.keys(index).forEach(key => {
       if (!excludedKeys.includes(key)) {
         if (key === 'table') {
-        result[key] = String(index[key]); // Convert value to string
-      } else {
-        result[key] = index[key];
-      }
+          result[key] = String(index[key]); // Convert value to string
+        } else {
+          result[key] = index[key];
+        }
       }
     });
     const payload = {
@@ -206,7 +192,7 @@ const handleDelete = async (index) => {
       time: index["time"], // or deleteRangeInMinutes if using separate state
       new_value: editValue,
     };
-
+    console.log(payload)
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('https://localhost:8000/modify_data_update', {
@@ -229,24 +215,44 @@ const handleDelete = async (index) => {
     }
   };
 
+  const renderTableHeaders = () => {
+    if (data.length === 0 || Object.keys(data).length === 0 || !currentMeasurement) {
+      return null;
+    }
+
+    const firstItem = data[currentMeasurement][0];
+
+    return (
+      <TableRow>
+        {Object.keys(firstItem).map((key, index) => (
+          <TableCell key={index}>{key}</TableCell>
+        ))}
+        <TableCell>Edit</TableCell>
+        <TableCell>Delete</TableCell>
+      </TableRow>
+    );
+  };
+
   const renderTableRows = () => {
     return data.length > 0 || Object.keys(data).length !== 0 ? (
       data[currentMeasurement].map((item, index) => (
         <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
           {/* Display all item's parameters dynamically */}
           {Object.keys(item).map((key, keyIndex) => (
-            <TableCell key={keyIndex} align={keyIndex === 0 ? "left" : "right"}>
-              {editIndex === index && key === 'value' ? (
-                <TextField
-                  type="text"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  fullWidth
-                />
-              ) : (
-                item[key]
-              )}
-            </TableCell>
+                        <TableCell key={keyIndex} align={keyIndex === 0 ? "left" : "right"}>
+                        {editIndex === index && key === 'value' ? (
+                          <TextField
+                            type="text"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            fullWidth
+                          />
+                        ) : key === 'time' ? (
+                          dayjs(item[key]).format('YYYY-MM-DD HH:mm:ss')
+                        ) : (
+                          item[key]
+                        )}
+                      </TableCell>
           ))}
           {/* Edit and Save/Cancel Buttons */}
           <TableCell align="right">
@@ -273,71 +279,67 @@ const handleDelete = async (index) => {
 
   const handleUpdate2 = (newData) => {
     setCombinedData(newData);
-};
+  };
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#000000', // Example primary color
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#000000', // Example primary color
+      },
+      secondary: {
+        main: '#dc3545', // Example secondary color
+      },
     },
-    secondary: {
-      main: '#dc3545', // Example secondary color
-    },
-  },
-});
+  });
 
-return (
-  <div>
-    <ThemeProvider theme={theme}>
-    <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 2 }}>
-      <Typography variant="h6">Data Editor</Typography>
-      <Grid container spacing={2}>
-        {/* Range, Measurement Selection, and Tag Filters remain the same */}
-        <DateTimeForm
+  return (
+    <div>
+      <ThemeProvider theme={theme}>
+        <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 2 }}>
+          <Typography variant="h6">Data Editor</Typography>
+          <Grid container spacing={2}>
+            {/* Range, Measurement Selection, and Tag Filters remain the same */}
+            <DateTimeForm
               initialStartDate={startDate}
               initialEndDate={endDate}
               onStartDateChange={setStartDate}
               onEndDateChange={setEndDate}
               currentTime={currentTime}
             />
-        <Grid item xs={12}>
+            <Grid item xs={12}>
+              <DynamicDropdownMenu
+                onUpdate={handleUpdate2}
+                startDate={startDate}
+                endDate={endDate}
+              />
+              <Button className="custom-button" onClick={fetchData} variant="contained" color="primary" sx={{ mt: 2 }}>
+                Fetch Data
+              </Button>
+            </Grid>
+          </Grid>
 
-        <DynamicDropdownMenu
-          onUpdate={handleUpdate2}
-          startDate={startDate}
-          endDate={endDate}
-        />
-          <Button className="custom-button" onClick={fetchData} variant="contained" color="primary" sx={{ mt: 2 }}>
-            Fetch Data
-          </Button>
-        </Grid>
-      </Grid>
+          <div>
+            <ButtonGroup variant="contained" aria-label="outlined primary button group">
+              {data.length > 0 || Object.keys(data).length !== 0 && Object.keys(data).map(measurement => (
+                <Button className="custom-button1" key={measurement} onClick={() => handleMeasurementChange(measurement)}>
+                  {measurement}
+                </Button>
+              ))}
+            </ButtonGroup>
 
-      <div>
-      <ButtonGroup variant="contained" aria-label="outlined primary button group">
-        {data.length > 0 || Object.keys(data).length !== 0 && Object.keys(data).map(measurement => (
-          <Button className="custom-button1"  key={measurement} onClick={() => handleMeasurementChange(measurement)}>
-            {measurement}
-          </Button>
-        ))}
-      </ButtonGroup>
-
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Measurement</TableCell>
-              <TableCell>Value</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {renderTableRows()}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </div>
-    </Box>
-    </ThemeProvider>
+            <TableContainer component={Paper} sx={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
+              <Table size="small">
+                <TableHead>
+                  {renderTableHeaders()}
+                </TableHead>
+                <TableBody>
+                  {renderTableRows()}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+        </Box>
+      </ThemeProvider>
     </div>
   );
 };

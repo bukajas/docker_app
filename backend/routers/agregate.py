@@ -26,7 +26,7 @@ async def agregate(
     flux_query = f'''
     from(bucket: "{INFLUXDB_AGRO_BUCKET}")
     |> range(start: {formatted_timestamp_start}, stop: {formatted_timestamp_end}) 
-    |> drop(columns: ["_result", "_field", "table"])
+    |> drop(columns: ["_result", "table"])
     |> group()
     |> yield()
     '''

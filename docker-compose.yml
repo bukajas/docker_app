@@ -27,6 +27,7 @@ services:
       - ./users_db:/var/lib/mysql
 
 
+
   docker-fastapi:
     build:
       context: ./backend
@@ -38,6 +39,7 @@ services:
       - '8000:8000'
     volumes:
       - ./backend:/fastapi
+      - /etc/localtime:/etc/localtime:ro
           
   docker-influxdb:
     image: influxdb:2.7.5
@@ -56,6 +58,8 @@ services:
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ZqdB328qWerxyD32I6XcWPChj0xixkxcyUQ2-k4TunHzcn7FmSGwCZ93kaHTw1DGVFAC0mH9RU7F_5aCy11yJQ==
         #- INFLUXD_TLS_CERT=/etc/ssl/influxdb/cert.pem
         #- INFLUXD_TLS_KEY=/etc/ssl/influxdb/key.pem
+      - NTP_SERVER=docker-ntp
+      - TZ=Etc/GMT-2
 
   docker-telegraf:
     image: telegraf:latest
@@ -79,10 +83,10 @@ services:
 
   docker-ntp:
     image: cturra/ntp
-    container_name: docker-ntp-server
+    container_name: docker-ntp
     restart: unless-stopped
     ports:
-      - "123:123/udp"
+      - "1123:1123/udp"
     environment:
       - NTP_SERVERS=pool.ntp.org
     volumes:

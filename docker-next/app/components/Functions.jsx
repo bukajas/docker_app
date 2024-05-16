@@ -27,7 +27,7 @@ export const aggregateDataDynamically = (data) => {
       // Iterate over each property in the item
       for (const [key, value] of Object.entries(item)) {
         // Skip these specific fields to not aggregate
-        if (['result', '_field', '_measurement'].includes(key)) continue;
+        if (['result', '_measurement'].includes(key)) continue;
         
         // Initialize the set if not already present
         if (!measurementMap[measurement][key]) {

@@ -22,6 +22,7 @@ async def delete_data_from_database(
     request_body: DeleteDataRequest, 
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write"],
 ):
+    print("hovno")
     delete_api = client.delete_api()
     formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(request_body.start_time)
     formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(request_body.end_time)
@@ -29,10 +30,13 @@ async def delete_data_from_database(
     for measurement,tags in request_body.data.items():
         predicate = f'_measurement="{measurement}"'
         for tag_key, tag_value in tags.items():
+            if tag_key == "_field":
+                continue
             predicate += f' AND "{tag_key}"="{tag_value}"'
             # print(formatted_timestamp_start, formatted_timestamp_end)
         try:
-            # print(predicate)
+            print(predicate)
+
             delete_api.delete(formatted_timestamp_start, formatted_timestamp_end, predicate, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG)
             # print("hel")
         
