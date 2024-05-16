@@ -31,12 +31,12 @@ def read_holding_registers():
         new_list = []
         for i in range(len(rr.registers)):
             new_list.append(random.randint(0,100))
-        data2 = 'preasure,VendorID=1a3!de,NetworkType=serial,unit=1,speed=10.3,protocol=ethernet/ip data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
-        data3 = 'preasure,VendorID=sonic,NetworkType=serial,unit=2,speed=30,protocol=ethernet/ip data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
-        data4 = 'preasure,VendorID=azonaj,NetworkType=tcp,unit=1,speed=30,protocol=ethernet/ip data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
-        data5 = 'coils,slaveID=1,masterID=1,unit=1,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100)) 
+        data2 = 'preasure,VendorID=1a3!de,NetworkType=serial,unit=1,speed=10.3,protocol=modbus data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
+        data3 = 'preasure,VendorID=sonic,NetworkType=serial,unit=2,speed=30,protocol=modbus data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
+        data4 = 'preasure,VendorID=azonaj,NetworkType=tcp,unit=1,speed=30,protocol=modbus data={}'.format(new_list[0]+random.randint(0,100))  # Formulate your data here
+        data5 = 'vibration,slaveID=1,masterID=1,unit=1,type=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100)) 
         # data6 = 'coil_list,slaveID=2,masterID=2,unit=2,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100)) 
-        data7 = 'coils,slaveID=2,masterID=2,unit=2,modbusType=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100))  
+        data7 = 'vibration,slaveID=2,masterID=2,unit=2,type=1,protocol=modbus data={}'.format(rr.registers[0]+random.randint(0,100))  
         print(f"data:::::: {data1}")
 
 
