@@ -4,6 +4,8 @@ FROM python:3.10
 # Set the working directory inside the container
 WORKDIR /fastapi
 
+RUN sleep 10
+
 # Copy the requirements file into the container
 COPY ./requirements.txt /fastapi/requirements.txt
 

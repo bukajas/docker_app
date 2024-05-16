@@ -13,6 +13,14 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from fastapi.security import OAuth2PasswordBearer
 import time
+import os
+
+
+MYSQL_USER = os.getenv('MYSQL_USER')
+MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
+MYSQL_HOST = os.getenv('MYSQL_HOST')
+MYSQL_PORT = os.getenv('MYSQL_PORT')
+MYSQL_DB = os.getenv('MYSQL_DB')
 
 SECRET_KEY = "a_very_secret_key"
 ALGORITHM = "HS256"
@@ -24,8 +32,8 @@ oauth2_scheme = OAuth2PasswordBearer(
     scopes={"admin": "all permisions","noright":"no rights", "read": "can read data not edit", "read+write": "can read and edit data"},
 )
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://asszonyij:1234567890@docker-mysql/auth_users"
-engine = create_engine(
+SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@docker-mysql/usersauth"
+engine = create_engine(      
     SQLALCHEMY_DATABASE_URL
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

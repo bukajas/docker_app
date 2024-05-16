@@ -22,11 +22,10 @@ buckets_api = client.buckets_api()
 def ensure_bucket_exists(bucket_name):
     try:
         buckets = buckets_api.find_buckets().buckets
+        print("what")
         if not any(bucket.name == bucket_name for bucket in buckets):
             buckets_api.create_bucket(bucket_name=bucket_name, org=INFLUXDB_ORG)
-            # print(f"Bucket '{bucket_name}' created.")
-        # else:
-        #     print(f"Bucket '{bucket_name}' already exists.")
+
     except Exception as e:
         print("An unexpected error occurred while checking/creating the bucket:", e)
 

@@ -1,10 +1,15 @@
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
+import os
+
+
+INFLUXDB_TOKEN= os.getenv('INFLUXDB_TOKEN')
+print(INFLUXDB_TOKEN)
 
 INFLUXDB_URL = "http://docker-influxdb:8086"
 INFLUXDB_ORG = "VUT"
 INFLUXDB_BUCKET = "school_data"
-INFLUXDB_TOKEN = "uSw9UaNW-cbxDFGV5mtHrXNR0wzp7pBo5J0jgRopYAkS183A7QEwGy91ME03SAgqEv2C-25RhhiT7qQsrP3ZSA=="
+#INFLUXDB_TOKEN = "r0RAuA2MvqvHTntNNMvIW8TrEJFguyDFofcsFvZnGhiRHc7Bzw_IT5xGz2BeLeBbV82BD_1gXlcSFFYB0LaNUQ=="
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 INFLUXDB_AGRO_BUCKET = INFLUXDB_BUCKET + "_agregated"
 
