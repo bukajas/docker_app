@@ -67,8 +67,9 @@ services:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - ./telegraf:/etc/telegraf:ro
       - ./CA/ca.pem:/etc/ssl/ca.pem:ro
-      - ./telegraf/telegraf.key:/etc/ssl/telegraf.key:ro
-      - ./telegraf/telegraf.cert:/etc/ssl/telegraf.cert:ro
+      - ./testCA/myCA/private/telegraf.key:/etc/ssl/telegraf.key:ro
+      - ./testCA/myCA/certs/telegraf.cert:/etc/ssl/telegraf.cert:ro
+      - ./testCA/myCA/ca.crt:/etc/ssl/myCA.crt:ro
 
         #environment:
       #      INFLUX_TOKEN: ZqdB328qWerxyD32I6XcWPChj0xixkxcyUQ2-k4TunHzcn7FmSGwCZ93kaHTw1DGVFAC0mH9RU7F_5aCy11yJQ==

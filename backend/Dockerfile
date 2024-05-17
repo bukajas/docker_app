@@ -13,8 +13,8 @@ COPY ./requirements.txt /fastapi/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /fastapi/requirements.txt
 
 # Copy the SSL certificates
-COPY ./cert.pem /fastapi/cert.pem
-COPY ./key.pem /fastapi/key.pem
+COPY ./server.crt /fastapi/cert.pem
+COPY ./server.key /fastapi/key.pem
 
 # Copy the rest of your application's code into the container
 COPY . /fastapi

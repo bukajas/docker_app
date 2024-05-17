@@ -12,10 +12,12 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
 client = ModbusTcpClient('localhost', port=5020)
-telegraf_url = 'https://localhost:8186/telegraf'  # URL to send data to Telegraf
+telegraf_url = 'https://192.168.122.118:8186/telegraf'  # URL to send data to Telegraf
 auth = HTTPBasicAuth('test', 'test')  # Basic authentication
-ca_bundle = '/home/asszonyij/docker_app/CA/ca.pem'
-client_cert = ('/home/asszonyij/docker_app/telegraf/telegraf.cert', '/home/asszonyij/docker_app/telegraf/telegraf.key')  # Client certificate and key
+ca_bundle = '/home/asszonyij/docker_app/testCA/myCA/ca.crt'
+
+
+client_cert = ('/home/asszonyij/docker_app/testCA/myCA/certs/client.crt', '/home/asszonyij/docker_app/testCA/myCA/private/client.key')  # Client certificate and key
 
 # ! problem with timestamps
 def read_holding_registers():
