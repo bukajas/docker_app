@@ -10,8 +10,6 @@ services:
     volumes:
       - ./docker-next:/app
       - /app/node_modules
-    environment:
-      - NODE_TLS_REJECT_UNAUTHORIZED=0
 
   docker-mysql:
     image: mysql:8.0
