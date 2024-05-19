@@ -14,9 +14,6 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-
-#! scopes - right now its just for one role, make it also in mysql database so taht user can have mutliple roles
-#! when stoped and started it will remenger the last logged in user and will show, but the users doesnt have valid token repair
 @router.post("/token", tags=["authentication"])
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
@@ -52,15 +49,26 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-#! TODO frontend 
-#! TODO admin can change users roles
+
 @router.post("/register", response_model=schemas.UserInDB2, tags=["authentication"])
 def register_user(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
+    """
+    Endpoint to register a new user.
+
+    Inputs:
+    - user: A UserCreate schema containing 'username', 'password', 'email', and 'full_name'.
+    - db: Database session dependency.
+
+    Outputs:
+    - The newly created user as a UserInDB2 schema.
+    """
+
     # Check if the username or email already exists
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
     
+    # Check if the email already exists in the database
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -70,7 +78,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     db_user = models.User(
         username=user.username,
         hashed_password=hashed_password,
-        role='noright',  # Set role as 'noright'
+        role='noright',  # Set the default role as 'noright'
         email=user.email,
         full_name=user.full_name
     )
@@ -82,18 +90,4 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     
     # Return the newly created user
     return db_user
-
-
-
-#TODO something like that if there will be that the user have permission for only specific data, than id should somehow know which data he wants to acces and only show it to him.
-#TODO probably users that have permissions for specific DBs?
-
-# @router.post("/login", response_model=schemas.UserInDB, tags=["authentication"])
-# def login(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
-#     db_user = db.query(models.User).filter(models.User.username == user.username).first()
-#     if not db_user or not auth.verify_password(user.password, db_user.hashed_password):
-#         raise HTTPException(status_code=400, detail="Incorrect username or password")
-#     access_token = auth.create_access_token(data={"sub": user.username})
-#     return {"access_token": access_token, "token_type": "bearer"}
-
 

@@ -23,7 +23,7 @@ plain_password = args.plain_password
 user_email = args.user_email
 user_full_name = args.user_full_name
 
-mysql_database = "usersauth"
+mysql_database = "authusers"
 user_role = "admin"
 
 # Hash the plaintext password

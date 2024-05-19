@@ -1,6 +1,6 @@
-from fastapi import HTTPException,  Depends, Security
+from fastapi import HTTPException, Security
 from influxdb_client import  Point
-from datetime import datetime, timedelta
+from datetime import timedelta
 import pytz
 from typing import Annotated
 import  models, schemas, auth
@@ -15,28 +15,34 @@ router = APIRouter()
 
 
 
-# TODO modify class
-# * Three subclasses
-# * 1. Get data from database to edit
-# * 2. send to DB updated data
-# * 3. send to DB deleted data
-# ! modify data not their values but the info (slaveid, masterid, type, etc.) and seperate or in bulk
-    
-
-# * Read data from database, and show them
-
 @router.post("/modify_data_read", tags=["Modify"])
 async def modify_data_read(
     request_body: schemas.EditReadDataRequest, 
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write"], 
-    # If 'admin' scope is required, ensure your authentication logic handles it
 ):
+    """
+    Endpoint to read and modify data based on user input.
+
+    Inputs:
+    - request_body: An EditReadDataRequest schema containing 'start_time', 'end_time', and data to be queried.
+    - current_user: The currently authenticated user.
+    - scopes: List of allowed scopes for this endpoint.
+
+    Outputs:
+    - The queried and grouped data from InfluxDB.
+    """
+
     try:
+        # Convert the provided timestamps from CEST to UTC
         formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(request_body.start_time)
         formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(request_body.end_time)
+       
+        # Generate the Flux query to fetch data from InfluxDB
         flux_query = Functions.generate_flux_query(request_body.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
         
+        # Execute the query and get the results
         tables = client.query_api().query(flux_query)
+        
         # Extract data values from the query result
         data = []
         for table in tables:
@@ -55,31 +61,42 @@ async def modify_data_read(
                 data.append(record_data)
         grouped_data = {}
 
-        # Group the data
+        # Group the data by measurement
         for item in data:
             measurement = item['_measurement']
             if measurement not in grouped_data:
                 grouped_data[measurement] = []
             grouped_data[measurement].append(item)
-        # print(grouped_data)
+
         return grouped_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# ! problem - when i update the new data is written to it but it is exactly the same to than it lists it at the end of the list, and it looks like it isnt fetching new data
     
 @router.post("/modify_data_update", tags=["Modify"])
 async def modify_data_update(
     update_request: schemas.EditUpdateDataRequest, 
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write"]):
+    """
+    Endpoint to update specific data in InfluxDB.
+
+    Inputs:
+    - update_request: An EditUpdateDataRequest schema containing 'time', 'measurement', 'tag_filters', and 'new_value'.
+    - current_user: The currently authenticated user.
+    - scopes: List of allowed scopes for this endpoint.
+
+    Outputs:
+    - A message confirming the successful update of the specified data.
+    """
+    
+    
     try:
         if update_request.time is None:
             raise HTTPException(status_code=400, detail="Time parameter is missing.")
         
-        # Assuming you want to delete data from a range starting X minutes before the provided time
+        # Define the time range for data deletion and update
         end_time = update_request.time + timedelta(seconds=.5)
-        start_time = end_time - timedelta(seconds=.5)  # For example, 5 minutes before end_time
+        start_time = end_time - timedelta(seconds=.5)
 
         # Ensure timezone is UTC for consistency
         start_time = start_time.replace(tzinfo=pytz.UTC)
@@ -88,11 +105,10 @@ async def modify_data_update(
         start_str = start_time.isoformat()
         end_str = end_time.isoformat()
 
+        # Initialize InfluxDB APIs
         query_api = client.query_api()
         write_api = client.write_api()
-
         delete_api = client.delete_api()
-
 
         # Construct the query to fetch existing data
         query = f'''
@@ -104,9 +120,8 @@ async def modify_data_update(
             if tag == "_field":
                 continue
             query += f' |> filter(fn: (r) => r.{tag} == "{value}")'
-        # print(query)
 
-
+        # Execute the query and collect records to keep
         result = query_api.query(org=INFLUXDB_ORG, query=query)
         records_to_keep = []
         for table in result:
@@ -116,19 +131,14 @@ async def modify_data_update(
 
                     records_to_keep.append(record)
 
-
-
-        # ! Here delete data and than write them.
-        # Write the modified data back to InfluxDB
-        # print(update_request)
-
+        # Construct the predicate for data deletion
         predicate = f'_measurement="{update_request.measurement}"'
-
         for tag, value in update_request.tag_filters.items():
             if tag == "_field":
                 continue
             predicate += f' AND {tag}="{value}"'
-        # Use the delete API from your client
+        
+        # Delete the existing data within the specified time range
         delete_api = client.delete_api()
         delete_api.delete(
             start_str,
@@ -138,6 +148,7 @@ async def modify_data_update(
             org=INFLUXDB_ORG
         )
 
+        # Prepare points to write back to InfluxDB
         points = []
         for record in records_to_keep:
             point = Point(record.get_measurement()).time(record.get_time())
@@ -149,7 +160,7 @@ async def modify_data_update(
             points.append(point)
 
 
-        # Update the specific field in a new data point
+        # Create a new data point with the updated value
         new_point = Point(update_request.measurement).time(update_request.time)
         for tag, value in update_request.tag_filters.items():
             if tag == "_field":
@@ -159,8 +170,7 @@ async def modify_data_update(
 
         points.append(new_point)
 
-        
-        # print(point)
+        # Write the modified data back to InfluxDB
         write_api.write(bucket=INFLUXDB_BUCKET, record=points)
 
         return {"message": "Data updated successfully."}
@@ -168,26 +178,38 @@ async def modify_data_update(
         raise HTTPException(status_code=500, detail=str(e))
     
 
-# ! influxdb doesnt support specifying deletion with field values
+
 @router.delete("/modify_data_delete", tags=["Modify"])
 async def modify_data_delete(
     delete_request: schemas.EditDeleteDataRequest, 
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write"]
 ):    
+    """
+    Endpoint to delete specific data in InfluxDB.
+
+    Inputs:
+    - delete_request: An EditDeleteDataRequest schema containing 'time', 'measurement', and 'tag_filters'.
+    - current_user: The currently authenticated user.
+    - scopes: List of allowed scopes for this endpoint.
+
+    Outputs:
+    - A message confirming the successful deletion of the specified data.
+    """
     try:
         if delete_request.time is None:
             raise HTTPException(status_code=400, detail="Time parameter is missing.")
         
-        # Assuming you want to delete data from a range starting X minutes before the provided time
+        # Define the time range for data deletion
         end_time = delete_request.time + timedelta(seconds=.5)
-        start_time = end_time - timedelta(seconds=.5)  # For example, 5 minutes before end_time
+        start_time = end_time - timedelta(seconds=.5) 
+
         # Ensure timezone is UTC for consistency
         start_time = start_time.replace(tzinfo=pytz.UTC)
         end_time = end_time.replace(tzinfo=pytz.UTC)
         start_str = start_time.isoformat()
         end_str = end_time.isoformat()
 
-
+        # Initialize InfluxDB APIs
         query_api = client.query_api()
         write_api = client.write_api()
         delete_api = client.delete_api()
@@ -203,9 +225,9 @@ async def modify_data_delete(
             if tag == "_field":
                 continue
             query += f' |> filter(fn: (r) => r.{tag} == "{value}")'
-        # print(query)
 
 
+        # Execute the query and collect records to keep
         result = query_api.query(org=INFLUXDB_ORG, query=query)
         records_to_keep = []
         for table in result:
@@ -222,7 +244,7 @@ async def modify_data_delete(
                 continue
             predicate += f' AND {tag}="{value}"'
 
-        # Use the delete API from your client
+        # Delete the existing data within the specified time range
         delete_api = client.delete_api()
         delete_api.delete(
             start_str,
@@ -232,6 +254,7 @@ async def modify_data_delete(
             org=INFLUXDB_ORG
         )
 
+        # Prepare points to write back to InfluxDB
         points = []
         for record in records_to_keep:
             point = Point(record.get_measurement()).time(record.get_time())

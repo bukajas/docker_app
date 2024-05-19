@@ -15,11 +15,11 @@ import Typography from '@mui/material/Typography';
 
 
 const RetentionPolicyPopup = ({ bucketId }) => {
-  const [open, setOpen] = useState(false);
-  const [retention, setRetention] = useState('');
-  const { scopes,isAuthenticated } = useContext(AuthContext); // Use useContext to access the current authentication context
+  const [open, setOpen] = useState(false); // State to manage the dialog open/close status
+  const [retention, setRetention] = useState(''); // State to manage the retention duration
+  const { scopes, isAuthenticated } = useContext(AuthContext); // Use useContext to access the current authentication context
 
-
+  // Function to handle opening the dialog
   const handleClickOpen = () => {
     if (hasAdminScope) {
         setOpen(true);
@@ -28,16 +28,18 @@ const RetentionPolicyPopup = ({ bucketId }) => {
         alert('You do not have permission to manage users.');
     }
 };
-
+  // Function to handle closing the dialog
   const handleClose = () => {
     setOpen(false);
   };
 
+    // Check if the user has admin scope
   const hasAdminScope = scopes.includes('admin');
     if (!hasAdminScope) {
         return <div></div>;
     }
 
+      // Function to fetch the current retention policy
   const fetchCurrentRetention = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -59,6 +61,7 @@ const RetentionPolicyPopup = ({ bucketId }) => {
     }
   };
 
+    // Function to handle saving the new retention policy
   const handleSave = async () => {
     try {
       console.log(retention)
@@ -95,7 +98,7 @@ const RetentionPolicyPopup = ({ bucketId }) => {
     return `${sec}s`;
   }
 
-
+  // Create a custom theme for the MUI components
   const theme = createTheme({
     palette: {
       primary: {

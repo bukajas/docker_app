@@ -16,6 +16,7 @@ import ExportButton from '../export/export_image';
 import { Chart, registerables } from 'chart.js';
 import '../../styles.css';
 
+// Utility function to convert a dictionary to a string excluding certain keys
 function convertDictToString(dict) {
   const keysToExclude = ['date', 'day', '_start', '_stop', '_time', "result", "table", "time", "_value"];
 
@@ -26,6 +27,7 @@ function convertDictToString(dict) {
     .join(',');                                         // Join pairs with commas
 }
 
+// Register Chart.js components
 Chart.register(...registerables);
 
 function ChartComponent2({ measurementId, handleDelete }) {
@@ -59,8 +61,8 @@ function ChartComponent2({ measurementId, handleDelete }) {
 
   const chartRef = useRef(null);
 
+    // Update itemsToDisplay based on selectionsFromDrawer or dataKeys
   useEffect(() => {
-    // Update itemsToDisplay based on whether selectionFromDrawer is empty
     if (selectionsFromDrawer.length > 0) {
 
       const dict = {};
@@ -93,14 +95,15 @@ function ChartComponent2({ measurementId, handleDelete }) {
     }
   }, [dataKeys, selectionsFromDrawer]); // Dependencies ensure this effect runs when either prop changes
 
+    // Set initial start and end dates
   useEffect(() => {
-    // Assume you fetch the initial date from an API or calculate it
     const initialStart = dayjs();
     const initialEnd = dayjs().add(1, 'hour');
     setStartDate(initialStart);
     setEndDate(initialEnd);
   }, []); // Empty dependency array ensures this runs only once on mount
 
+    // Handle periodic fetching based on fetchEnabled state
   useEffect(() => {
     if (fetchEnabled) {
       const id = setInterval(handleSubmit, 1000); // Pass handleSubmit reference
@@ -123,6 +126,8 @@ function ChartComponent2({ measurementId, handleDelete }) {
     }
   }, [startDate, endDate]); // Dependencies on time inputs
 
+
+    // Update chart data whenever data or selected keys change
   useEffect(() => {
     if (data) {
       // Prepare labels and datasets

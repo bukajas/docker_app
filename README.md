@@ -190,6 +190,17 @@ promene v souboru `env` promenne `INFLUXDB_TOKEN`
 ![alt text](images/generated.png)
 
 
+## Mozny problem
+
+Muze se stat ze nekdy fastapi nebo nektere dalsi sluzby zahlasi chybu pri startu dockeru. napr:
+
+
+    docker-fastapi     | sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1061, "Duplicate key name 'ix_server_users_id'")
+
+
+Tuto chybu lze jednoduse odstranit restartovat serveru.
+
+
 
 
 ## Pouziti

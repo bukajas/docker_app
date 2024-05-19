@@ -1,24 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { MenuItem, TextField, Button, FormControl, InputLabel, Select, Box, RadioGroup, FormControlLabel, Radio, Grid, Switch } from '@mui/material';
+import { TextField, Button, FormControl, Box, RadioGroup} from '@mui/material';
 import DynamicDropdownMenu from '../components/Selection_component'
 import dayjs from 'dayjs';
-
 import DateTimeForm from '../components/Time_component'
 
 
+
 const DeleteDataForm = () => {
-  const [measurements, setMeasurements] = useState({});
-  const [selectedMeasurement, setSelectedMeasurement] = useState('');
-  const [tags, setTags] = useState({});
-  const [token, setToken] = useState('');
+  // State variables to manage form inputs and state
   const [timeOption, setTimeOption] = useState('minutes');
-  const [minutes, setMinutes] = useState('');
-  const [useMinutesAgo, setUseMinutesAgo] = useState(false);
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
   const [range, setRange] = useState('');
-  const [fetchEnabled, setFetchEnabled] = useState(false);
-  const [rangeUnit, setRangeUnit] = useState('minutes'); // Default value is minutes
   const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
   const [currentTime, setCurrentTime] = useState(dayjs());
   const [combinedData, setCombinedData] = useState({})
@@ -26,7 +19,7 @@ const DeleteDataForm = () => {
   const [endDate, setEndDate] = useState("");
 
 
-
+  // Function to handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
     
@@ -61,36 +54,11 @@ const DeleteDataForm = () => {
     }
   };
 
-  const renderTagInputs = () => {
-    const measurementTags = measurements[selectedMeasurement] || [];
-    return measurementTags.map((tag) => (
-      <TextField
-        key={tag}
-        label={tag}
-        variant="outlined"
-        margin="normal"
-        fullWidth
-        onChange={(e) => setTags({ ...tags, [tag]: e.target.value })}
-        required
-      />
-    ));
-  };
-  const handleSwitchChange = (event) => {
-    setUseMinutesAgo(event.target.checked);
-    if (event.target.checked) {
-      setFromTime('');
-      setToTime('');
-    } else {
-      setRange('');
-    }
-  };
+  
+  
 
-  const handleNow = () => {
-    const now = new Date().toISOString().slice(0, 16);
-    setFromTime(now);
-    setToTime(now);
-  };
-  // Add useEffect to monitor time inputs
+  
+  // Monitor changes in time inputs to enable or disable form submission
   useEffect(() => {
     if (fromTime && toTime || range) {
       setTimeFrameSubmitted(true);
@@ -99,6 +67,7 @@ const DeleteDataForm = () => {
     }
   }, [fromTime, toTime, range]); // Dependencies on time inputs
 
+    // Handle updates from the DynamicDropdownMenu
   const handleUpdate = (newData) => {
     setCombinedData(newData);
 };

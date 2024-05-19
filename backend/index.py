@@ -5,9 +5,6 @@ import Agregate
 
 
 
-# 1. user can access data only after signing in - partialy done
-# 2. one graph will have its own inputs, so that user can have multiple gprahs, and can choose what is want to see, - DONE
-# 3. export data from the graph, and overall
 
 
 # TODO add security, authorization - where the functions are blocked for non authorized user
@@ -17,11 +14,15 @@ import Agregate
 
  
 # Replace with your InfluxDB details
-INFLUXDB_URL = "http://docker-influxdb:8086"
-INFLUXDB_ORG = "VUT"
-INFLUXDB_BUCKET = "school_data"
-INFLUXDB_TOKEN = "uSw9UaNW-cbxDFGV5mtHrXNR0wzp7pBo5J0jgRopYAkS183A7QEwGy91ME03SAgqEv2C-25RhhiT7qQsrP3ZSA=="
+# INFLUXDB_URL = "http://docker-influxdb:8086"
+# INFLUXDB_ORG = "VUT"
+# INFLUXDB_BUCKET = "school_data"
+# INFLUXDB_TOKEN = "uSw9UaNW-cbxDFGV5mtHrXNR0wzp7pBo5J0jgRopYAkS183A7QEwGy91ME03SAgqEv2C-25RhhiT7qQsrP3ZSA=="
+
+# Create FastAPI instance
 app = FastAPI()
+
+# Add CORS middleware to allow requests from any origin
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,7 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# Include routers for different modules
 app.include_router(retencion.router)
 app.include_router(agregate.router)
 app.include_router(Agregate.router)
@@ -41,12 +42,11 @@ app.include_router(authentication.router)
 app.include_router(users.router)
 app.include_router(measurements.router)
 app.include_router(read.router)
-# app.include_router(write.router)
 
 
 
 
-
+# Root endpoint
 @app.get("/api")
 async def root():
     return {"message": "Awesome Leads Manager"}

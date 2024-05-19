@@ -10,10 +10,17 @@ router = APIRouter()
 @router.get("/users", response_model=List[schemas.UserDisplay], tags=["Users"])
 def read_users(
     db: Session = Depends(auth.get_db)):
-    users = db.query(models.UserList).all()
-    print(users[1].full_name)
-    print(users[0].email)
+    """
+    Endpoint to retrieve a list of users.
 
+    Inputs:
+    - db: Database session dependency.
+
+    Outputs:
+    - A list of users represented by the UserDisplay schema.
+    """
+    
+    users = db.query(models.UserList).all()
     return users
 
 
@@ -24,7 +31,21 @@ def update_user_role(
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"], 
     db: Session = Depends(auth.get_db),
 ):
-     # Fetch the user to update from the DB
+    """
+    Endpoint to update a user's role.
+
+    Inputs:
+    - user_id: The ID of the user whose role is to be updated.
+    - role_update: A RoleUpdate schema containing the new role.
+    - current_user: The currently authenticated user.
+    - scopes: List of allowed scopes for this endpoint.
+    - db: Database session dependency.
+
+    Outputs:
+    - The updated user represented by the UserInDB schema.
+    """
+
+    # Fetch the user to update from the DB
     user_to_update = db.query(models.User).filter(models.User.id == user_id).first()
     if not user_to_update:
         raise HTTPException(status_code=404, detail="User not found")
@@ -42,6 +63,19 @@ def delete_user(
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin"], 
     db: Session = Depends(auth.get_db),
 ):
+    """
+    Endpoint to delete a user.
+
+    Inputs:
+    - user_id: The ID of the user to be deleted.
+    - current_user: The currently authenticated user.
+    - scopes: List of allowed scopes for this endpoint.
+    - db: Database session dependency.
+
+    Outputs:
+    - A message confirming the deletion of the user.
+    """
+
     # Fetch the user to delete from the DB
     user_to_delete = db.query(models.User).filter(models.User.id == user_id).first()
     if not user_to_delete:
@@ -50,4 +84,5 @@ def delete_user(
     # Delete the user and commit changes
     db.delete(user_to_delete)
     db.commit()
+    
     return {"user deleted"}

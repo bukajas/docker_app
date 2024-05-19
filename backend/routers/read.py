@@ -3,18 +3,16 @@ from pydantic import BaseModel
 from typing import Annotated
 import  models, auth, schemas
 from dependencies import client, INFLUXDB_BUCKET
-from datetime import datetime
 from fastapi import APIRouter
-import pytz
 import Time_functions
 import Functions
-import json
+
 
 
 router = APIRouter()
 
 class ReadData(BaseModel):
-    range: int  # Updated to reflect the frontend's "Last Hours" parameter
+    range: int 
     dataType: str
     data: str
     slaveId: int
@@ -22,31 +20,47 @@ class ReadData(BaseModel):
     modbusType: int
 
 
-# TODO read data but manage so that there isnt same data fetched twice, so to save bandwidth
-# TODO the data needs to have field or tag that specifies which protocos it is.
-# TODO neco todo
 @router.post("/read_data_dynamic", tags=["Read"])
 async def read_data_dynamic(
     readData: schemas.DynamicReadData,
     current_user: Annotated[models.User, Security(auth.get_current_active_user)], scopes=["admin","read+write","read"]):
-    try:
+    
+    """
+    Endpoint to read dynamic data from InfluxDB based on user input.
 
+    Inputs:
+    - readData: A DynamicReadData schema containing 'start_time', 'end_time', and data to be queried.
+    - current_user: The currently authenticated user.
+    - scopes: List of allowed scopes for this endpoint.
+
+    Outputs:
+    - A JSON response containing the queried and formatted data.
+    """
+    
+    try:
+        #  Convert the provided timestamps from CEST to UTC
         formatted_timestamp_start = Time_functions.format_timestamp_cest_to_utc(readData.start_time)
         formatted_timestamp_end = Time_functions.format_timestamp_cest_to_utc(readData.end_time)
+        
+        # Generate the Flux query to fetch data from InfluxDB
         flux_query = Functions.generate_flux_query(readData.data,formatted_timestamp_start,formatted_timestamp_end,INFLUXDB_BUCKET)
 
+
+        # Execute the query and get the results
         tables = client.query_api().query(flux_query)
         data = []
         for table in tables:
             for record in table.records:
                 # Convert the record to a dictionary, including all details
                 record_dict = {key: getattr(record, key) for key in dir(record) if not key.startswith('_')}
-                
                 record_dict = record.values
                 record_dict['time'] = record.get_time().isoformat() if record.get_time() else None
                 data.append(record_dict)
+        
+        # Group the data
         grouped_data = group_data(data)
         j = {"data": grouped_data}
+        
         formatted_data = Time_functions.format_timestamps_utc_to_cest(j)
         
         # print(formatted_data)

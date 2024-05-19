@@ -15,31 +15,34 @@ from fastapi.security import OAuth2PasswordBearer
 import time
 import os
 
-
+# Environment variables for MySQL database connection
 MYSQL_USER = os.getenv('MYSQL_USER')
 MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
 MYSQL_HOST = os.getenv('MYSQL_HOST')
 MYSQL_PORT = os.getenv('MYSQL_PORT')
 MYSQL_DB = os.getenv('MYSQL_DB')
 
+# JWT secret key and algorithm
 SECRET_KEY = "a_very_secret_key"
 ALGORITHM = "HS256"
 
-# time.sleep(5)
+# Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# OAuth2 password bearer setup
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
     scopes={"admin": "all permisions","noright":"no rights", "read": "can read data not edit", "read+write": "can read and edit data"},
 )
 
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@docker-mysql/usersauth"
-engine = create_engine(      
-    SQLALCHEMY_DATABASE_URL
-)
+# SQLAlchemy setup for MySQL database
+SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@docker-mysql/authusers"
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 models.Base.metadata.create_all(bind=engine)
 
+# Dependency to get the database session
 def get_db():
     db = SessionLocal()
     try:
@@ -47,12 +50,15 @@ def get_db():
     finally:
         db.close()
 
+# Password verification
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+# Password hashing
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+# Create a JWT access token
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
@@ -63,7 +69,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-
+# Authenticate the user by verifying username and password
 def authenticate_user(db: Session, username: str, password: str):
     user = get_user(db, username)
     if not user or not verify_password(password, user.hashed_password):
@@ -71,11 +77,12 @@ def authenticate_user(db: Session, username: str, password: str):
     return user
 
 
-
+# Get the user by username from the database
 def get_user(db: Session, username: str):
-    #should return userInDB class
     return db.query(models.User).filter(models.User.username == username).first()
 
+
+# Get the current user based on the provided JWT token and security scopes
 async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
@@ -99,12 +106,7 @@ async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str
     if user is None:
         raise credentials_exception
     for scope in security_scopes.scopes:
-        # print(scope)
-        # print(token_data.scopes)
-        # if scope in token_data.scopes:
-        #     return user
-        # else:
-        #     continue
+
         if scope not in token_data.scopes:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -113,9 +115,8 @@ async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str
             )
     return user
 
+# Get the current active user based on the JWT token
 async def get_current_active_user(
     current_user: Annotated[models.User, Security(get_current_user)],
 ):
-    # if current_user.disabled:
-    #     raise HTTPException(status_code=400, detail="Inactive user")
     return current_user

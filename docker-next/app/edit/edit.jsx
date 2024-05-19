@@ -21,6 +21,7 @@ import DateTimeForm from '../components/Time_component'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import '../../styles.css';
 
+// Function to sort data by time
 const sortDataByTime = (data) => {
   // Iterate over each measurement list
   for (const measurement in data) {
@@ -31,15 +32,13 @@ const sortDataByTime = (data) => {
 };
 
 const DataEditor = () => {
-  const [measurements, setMeasurements] = useState({});
-  const [selectedMeasurement, setSelectedMeasurement] = useState('');
+    // State variables to manage form inputs and state
   const [data, setData] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
   const [range, setRange] = useState('');
-  const [tags, setTags] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [combinedData, setCombinedData] = useState({})
@@ -47,10 +46,12 @@ const DataEditor = () => {
   const [currentMeasurement, setCurrentMeasurement] = useState(null);
   const [timeFrameSubmitted, setTimeFrameSubmitted] = useState(false);
 
+    // Handle changes to the selected measurement
   const handleMeasurementChange = (measurement) => {
     setCurrentMeasurement(measurement);
   };
 
+    // Function to format data list by excluding certain keys
   const formatDataList = (dataList) => {
     // Check if dataList is an object
     if (typeof dataList !== 'object' || Array.isArray(dataList)) {
@@ -81,6 +82,7 @@ const DataEditor = () => {
     return formattedData;
   };
 
+  // Monitor changes in time inputs to enable or disable form submission
   useEffect(() => {
     if (fromTime && toTime || range) {
       setTimeFrameSubmitted(true);
@@ -89,6 +91,7 @@ const DataEditor = () => {
     }
   }, [fromTime, toTime, range]); // Dependencies on time inputs
 
+    // Fetch data from the API
   const fetchData = async () => {
     try {
       const body = {
@@ -113,7 +116,6 @@ const DataEditor = () => {
 
       const sortedData = sortDataByTime(responseData);
       const formattedList = formatDataList(sortedData);
-      console.log(formattedList);
       setData(formattedList);
       if (currentMeasurement) {
         const cur = currentMeasurement;
@@ -126,6 +128,7 @@ const DataEditor = () => {
     }
   };
 
+    // Handle delete action
   const handleDelete = async (index) => {
     const item = data[index - 1];
 
@@ -160,9 +163,8 @@ const DataEditor = () => {
     }
   };
 
+    // Handle update action
   const handleUpdate = async (index) => {
-    console.log(index, editIndex, data[currentMeasurement], selectedMeasurement, currentMeasurement);
-
     if (editIndex === null) {
       console.error("No item selected for update");
       return;
@@ -215,6 +217,7 @@ const DataEditor = () => {
     }
   };
 
+    // Render table headers dynamically
   const renderTableHeaders = () => {
     if (data.length === 0 || Object.keys(data).length === 0 || !currentMeasurement) {
       return null;
@@ -233,6 +236,7 @@ const DataEditor = () => {
     );
   };
 
+  // Render table rows dynamically
   const renderTableRows = () => {
     return data.length > 0 || Object.keys(data).length !== 0 ? (
       data[currentMeasurement].map((item, index) => (
@@ -277,6 +281,7 @@ const DataEditor = () => {
     ) : null;
   };
 
+    // Handle updates from the DynamicDropdownMenu
   const handleUpdate2 = (newData) => {
     setCombinedData(newData);
   };

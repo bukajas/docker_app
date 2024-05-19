@@ -1,11 +1,10 @@
 import React, { useState ,useEffect} from 'react';
-import { Drawer,Box,Tabs,Tab, Checkbox, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Typography, Button,Paper } from '@mui/material';
+import { Drawer,Box, Checkbox, FormControlLabel, Accordion, AccordionSummary, AccordionDetails, Typography, Button } from '@mui/material';
 import {stringToDictionary,aggregateDataDynamically} from '../components/Functions'
-import DynamicDropdownMenu from '../components/Selection_component'
-import DateTimeForm from '../components/Time_component'
+
 import '../../styles.css';
 
-
+// Function to filter data by selections
 function filterDataBySelections(dataKeys, selectionsFromDrawer) {
     // Filter each data item
     return dataKeys.filter(item => {
@@ -27,7 +26,6 @@ function filterDataBySelections(dataKeys, selectionsFromDrawer) {
 function RightDrawer({data, onSelectionsChange, signal}) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
-  const [values,setValues] = useState({})
   const [dataKeys,setDataKeys] = useState(null)
   const [selectedButtons, setSelectedButtons] = useState({});
   const [selections, setSelections] = useState({});
@@ -41,7 +39,6 @@ function RightDrawer({data, onSelectionsChange, signal}) {
   }, [signal]);
 
     useEffect(() => {
-      // console.log(selections,data)
         if(data){
 
             const keys = Object.keys(data);
@@ -71,15 +68,9 @@ function RightDrawer({data, onSelectionsChange, signal}) {
       setIsOpen(open);
   };
 
-    const handleTabChange = (event, newValue) => {
-        setSelectedTab(newValue);
-    };
-
-
 
     const handleToggle = (measurement, key, value) => {
       const currentSelections = selections[measurement]?.[key] || [];
-      // console.log(selections);
       const newSelections = currentSelections.includes(value)
         ? currentSelections.filter(v => v !== value)
         : [...currentSelections, value];

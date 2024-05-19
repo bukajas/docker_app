@@ -21,7 +21,7 @@ export default function DynamicCollapsibleTabs({ onUpdate, startDate, endDate })
       const endMoment = moment(endDate);
 
       // Check for valid, non-empty, and correctly ordered dates
-      // if (!startMoment.isValid() || !endMoment.isValid() || startMoment.isSame(endMoment) || startMoment.isAfter(endMoment)) {
+
       if (!startMoment.isValid() || !endMoment.isValid() || startMoment.isAfter(endMoment) || startDate.isSame(endDate)) {
         return;
       }

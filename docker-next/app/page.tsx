@@ -1,9 +1,7 @@
 "use client";
 "use client";
-import { AppBar, Toolbar, Button, Drawer, List, ListItem, ListItemText, Container, Typography } from '@mui/material';
+import { AppBar, Toolbar, Drawer, Container, Typography } from '@mui/material';
 import React, { useState } from 'react';
-
-
 import DeleteDataForm from "./delete/delete"; // Component for deleting data
 import DataEditor from "./edit/edit"; // Component for editing data
 import Login from "./login"; // Login component
@@ -17,11 +15,6 @@ import DrawerItems from './components/List_page'; // Adjust the path according t
 
 export default function Home() {
   const [activeComponent, setActiveComponent] = useState('default');
-  const [chartInstances, setChartInstances] = useState([]);
-  const [nextId, setNextId] = useState(0);
-  
-
-
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

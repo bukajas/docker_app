@@ -1,28 +1,25 @@
-import pandas as pd
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 import asyncio
-from dependencies import client, INFLUXDB_AGRO_BUCKET, INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, ACCESS_TOKEN_EXPIRE_MINUTES
-from fastapi_utils.session import FastAPISessionMaker
-from fastapi_utils.tasks import repeat_every
+from dependencies import client, INFLUXDB_AGRO_BUCKET, INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN
 from fastapi import APIRouter
 import pytz
 from datetime import datetime, timedelta
 
 
 router = APIRouter()
-
-
-
-
 client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
 buckets_api = client.buckets_api()
 
 
 def ensure_bucket_exists(bucket_name):
+    """
+    Ensure that the specified bucket exists in InfluxDB.
+    If the bucket does not exist, create it.
+    """
+
     try:
         buckets = buckets_api.find_buckets().buckets
-        print("what")
         if not any(bucket.name == bucket_name for bucket in buckets):
             buckets_api.create_bucket(bucket_name=bucket_name, org=INFLUXDB_ORG)
 
@@ -30,7 +27,10 @@ def ensure_bucket_exists(bucket_name):
         print("An unexpected error occurred while checking/creating the bucket:", e)
 
 async def read_last_timestamp():
-    tz_cest = pytz.timezone('Europe/Berlin')
+    """
+    Read the last timestamp from InfluxDB and aggregate data within a specified time range.
+    """
+
     tz_utc = pytz.timezone('UTC')
     query = f'from(bucket: "{INFLUXDB_AGRO_BUCKET}") |> range(start: -10m) |> last()'
     try:
@@ -60,7 +60,6 @@ async def read_last_timestamp():
         start = formatted_timestamp
     else:
         start = (now_utc - timedelta(seconds=10)).strftime('%Y-%m-%dT%H:%M:%SZ')
-    # start = formatted_timestamp if formatted_timestamp else formatted_now
     end = formatted_now
     query1 = f'''
     from(bucket: "{INFLUXDB_BUCKET}")
@@ -109,10 +108,17 @@ async def read_last_timestamp():
 
 
 async def periodic_task():
+    """
+    Periodically execute the read_last_timestamp function every 20 seconds.
+    """
     while True:
         await read_last_timestamp()
         await asyncio.sleep(20)
 
 @router.on_event("startup")
+
 async def startup_event():
+    """
+    Create a task to run the periodic_task function when the FastAPI application starts up.
+    """
     asyncio.create_task(periodic_task())

@@ -60,7 +60,6 @@ def get_measurements_with_tags(start,end):
             |> distinct(column: "_value") 
             |> drop(columns: ["table", "result"])
         '''        
-        print(tags_query)
         tags_result = query_api.query(org=INFLUXDB_ORG, query=tags_query)
         tags = [
             record.get_value() for table in tags_result for record in table.records 

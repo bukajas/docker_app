@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from 'react';
+
 
 
 export function stringToDictionary(str) {
@@ -14,6 +14,7 @@ export function stringToDictionary(str) {
     }
     return dictionaries;
 }
+
 
 export const aggregateDataDynamically = (data) => {
     const measurementMap = {};
