@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends, status,  Security
+from fastapi import HTTPException, Depends, status
 from datetime import timedelta
 from typing import Annotated
 from passlib.context import CryptContext
@@ -22,6 +22,18 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
     db: Session = Depends(auth.get_db)
 ) -> schemas.Token:
+    """
+    Endpoint to obtain an access token for authentication.
+
+    Inputs:
+    - form_data: OAuth2PasswordRequestForm containing 'username' and 'password'.
+    - db: Database session dependency.
+
+    Outputs:
+    - JSON response containing the access token and token type.
+    """
+
+    # Authenticate the user with provided username and password
     user = auth.authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -29,11 +41,16 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Set the access token expiration time
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    # Create the access token with user information and expiration time
     access_token = auth.create_access_token(
         data={"sub": user.username, "scopes": [user.role]}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 #! TODO frontend 
 #! TODO admin can change users roles

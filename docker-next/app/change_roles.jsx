@@ -20,8 +20,9 @@ const UsersPage = () => {
                 }
             });
             if (!response.ok) throw new Error('Failed to fetch');
+
             const data = await response.json();
-            console.log(data)
+            console.log(data[0].full_name)
             setUsers(data);
         } catch (error) {
             console.error('Failed to fetch users', error);

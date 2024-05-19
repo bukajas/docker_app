@@ -9,8 +9,10 @@ router = APIRouter()
 
 @router.get("/users", response_model=List[schemas.UserDisplay], tags=["Users"])
 def read_users(
-    db: Session = Depends(auth.get_db), ):
+    db: Session = Depends(auth.get_db)):
     users = db.query(models.UserList).all()
+    print(users[1].full_name)
+    print(users[0].email)
 
     return users
 

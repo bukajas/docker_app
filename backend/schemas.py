@@ -117,6 +117,8 @@ class UserDisplay(BaseModel):
     id: int
     username: str
     role: str
+    full_name: str
+    email: str
 
 class UserDisplay2(BaseModel):
     id: int

@@ -1,3 +1,4 @@
+import argparse
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -7,14 +8,23 @@ from passlib.context import CryptContext
 # Initialize password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Prompt the user for input
-mysql_root_password = "1234567890"
-mysql_database= "usersauth"
-user_name = "test"
-plain_password = "test"
+# Command-line argument parsing
+parser = argparse.ArgumentParser(description="Set up the users database.")
+parser.add_argument('--mysql_root_password', required=True, help='MySQL root password')
+parser.add_argument('--user_name', required=True, help='User name')
+parser.add_argument('--plain_password', required=True, help='Plain password')
+parser.add_argument('--user_email', required=True, help='User email')
+parser.add_argument('--user_full_name', required=True, help='User full name')
+args = parser.parse_args()
+
+mysql_root_password = args.mysql_root_password
+user_name = args.user_name
+plain_password = args.plain_password
+user_email = args.user_email
+user_full_name = args.user_full_name
+
+mysql_database = "usersauth"
 user_role = "admin"
-user_email = "test@test.cz"
-user_full_name = "testest"
 
 # Hash the plaintext password
 user_hashed_password = pwd_context.hash(plain_password)
