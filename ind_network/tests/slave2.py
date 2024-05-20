@@ -31,5 +31,4 @@ server_context = ModbusServerContext(slaves=slave_context, single=True)
 # Start the Modbus TCP server
 data = StartTcpServer(context=server_context, address=("localhost", 5020))
 
-print("Hello")
 

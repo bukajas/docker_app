@@ -64,7 +64,6 @@ const RetentionPolicyPopup = ({ bucketId }) => {
     // Function to handle saving the new retention policy
   const handleSave = async () => {
     try {
-      console.log(retention)
       const token = localStorage.getItem('token');
       const response = await fetch(`https://localhost:8000/update-retention`, {
         method: 'POST',

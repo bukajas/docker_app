@@ -1,90 +1,54 @@
-import argparse
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import SQLAlchemyError
-from passlib.context import CryptContext
+import subprocess
+import sys
+import venv
+import os
+import shutil
 
-# Initialize password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Define the main script and its dependencies
+MAIN_SCRIPT = 'users_db_setup_second.py'  # replace with your main script name
+DEPENDENCIES = ['requests','cryptography', 'sqlalchemy', 'pymysql', 'passlib']  # include all required dependencies
 
-# Command-line argument parsing
-parser = argparse.ArgumentParser(description="Set up the users database.")
-parser.add_argument('--mysql_root_password', required=True, help='MySQL root password')
-parser.add_argument('--user_name', required=True, help='User name')
-parser.add_argument('--plain_password', required=True, help='Plain password')
-parser.add_argument('--user_email', required=True, help='User email')
-parser.add_argument('--user_full_name', required=True, help='User full name')
-args = parser.parse_args()
 
-mysql_root_password = args.mysql_root_password
-user_name = args.user_name
-plain_password = args.plain_password
-user_email = args.user_email
-user_full_name = args.user_full_name
+mysql_root_password = input("Enter MySQL root password: ")
+user_name = input("Enter user name: ")
+plain_password = input("Enter plain password: ")
+user_email = input("Enter user email: ")
+user_full_name = input("Enter user full name: ")
 
-mysql_database = "authusers"
-user_role = "admin"
 
-# Hash the plaintext password
-user_hashed_password = pwd_context.hash(plain_password)
 
-# Connection string for creating the database
-connection_string = f"mysql+pymysql://asszonyij:{mysql_root_password}@localhost:3333"
+# Command-line arguments for the main script
+args = {
+    'mysql_root_password': mysql_root_password,
+    'user_name': user_name,
+    'plain_password': plain_password,
+    'user_email': user_email,
+    'user_full_name': user_full_name
+}
 
-# Create engine for initial connection to create the database
-engine = create_engine(connection_string)
+# Create a virtual environment
+venv_dir = '.venv_temp'
+venv.create(venv_dir, with_pip=True)
 
-# Connect to the MySQL server and create the database if it does not exist
+# Define the path to the virtual environment's Python interpreter
+
+python_executable = os.path.join(venv_dir, 'bin', 'python')
+
 try:
-    with engine.connect() as connection:
-        connection.execute(f"CREATE DATABASE IF NOT EXISTS {mysql_database}")
-    print(f"Database '{mysql_database}' created successfully.")
-except SQLAlchemyError as e:
-    print(f"Error occurred: {e}")
+    # Install dependencies
+    subprocess.run([python_executable, '-m', 'pip', 'install'] + DEPENDENCIES, check=True)
 
-# Define the new engine connection string for the specific database
-db_connection_string = f"mysql+pymysql://root:{mysql_root_password}@localhost:3333/{mysql_database}"
-db_engine = create_engine(db_connection_string)
-
-# Base class for declarative class definitions
-Base = declarative_base()
-
-# Define the server_users ORM model
-class ServerUser(Base):
-    __tablename__ = 'server_users'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(50), unique=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(String(50), default='noright')
-    email = Column(String(255), unique=True, nullable=False)
-    full_name = Column(String(255))
-
-# Create the table if it does not exist
-try:
-    Base.metadata.create_all(db_engine)
-    print("Table 'server_users' created successfully.")
-except SQLAlchemyError as e:
-    print(f"Error occurred: {e}")
-
-# Create a new session
-Session = sessionmaker(bind=db_engine)
-session = Session()
-
-# Insert the new user
-try:
-    new_user = ServerUser(
-        username=user_name,
-        hashed_password=user_hashed_password,
-        role=user_role,
-        email=user_email,
-        full_name=user_full_name
-    )
-    session.add(new_user)
-    session.commit()
-    print("User data inserted successfully.")
-except SQLAlchemyError as e:
-    session.rollback()
-    print(f"Error occurred: {e}")
+    # Prepare the command to run the main script with arguments
+    command = [python_executable, MAIN_SCRIPT] + [f'--{key}={value}' for key, value in args.items()]
+    
+    # Run the main script and capture the output
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    print(result.stdout)
+except subprocess.CalledProcessError as e:
+    print(f"Error occurred while running the script: {e}")
+    print(f"Return code: {e.returncode}")
+    print(f"Output: {e.output}")
+    print(f"Error output: {e.stderr}")
 finally:
-    session.close()
+    # Clean up by deleting the virtual environment
+    shutil.rmtree(venv_dir)

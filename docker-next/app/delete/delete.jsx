@@ -32,7 +32,6 @@ const DeleteDataForm = () => {
       start_time: startDate.format('YYYY-MM-DD HH:mm:ss'),
       end_time: endDate.format('YYYY-MM-DD HH:mm:ss'),
     };
-    console.log(JSON.stringify(body))
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('https://localhost:8000/delete_data', {

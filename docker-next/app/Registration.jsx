@@ -35,7 +35,6 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(formData)
         try {
             const response = await axios.post('https://localhost:8000/register', {
                 username: formData.username,

@@ -22,7 +22,6 @@ const UsersPage = () => {
             if (!response.ok) throw new Error('Failed to fetch');
 
             const data = await response.json();
-            console.log(data[0].full_name)
             setUsers(data);
         } catch (error) {
             console.error('Failed to fetch users', error);
@@ -37,7 +36,6 @@ const UsersPage = () => {
     const handleRoleChange = async (userId, newRole) => {
         try {
             const token = localStorage.getItem('token');
-            console.log(userId, newRole)
             const response = await fetch(`https://localhost:8000/users/${userId}/role`, {
                 method: 'PATCH',
                 headers: {

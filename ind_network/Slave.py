@@ -21,8 +21,6 @@ def update_modbus_context(context):
         for i in range(5):
             context[0].setValues(3, 1, [modbus_value,modbus_value+2,modbus_value+3,modbus_value+12,modbus_value+43,modbus_value+11,modbus_value+50])
 
-        print("yo")
-        print(modbus_value)
         time.sleep(1)  # Update every second
 from pymodbus.device import ModbusDeviceIdentification
 

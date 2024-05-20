@@ -194,7 +194,6 @@ const DataEditor = () => {
       time: index["time"], // or deleteRangeInMinutes if using separate state
       new_value: editValue,
     };
-    console.log(payload)
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('https://localhost:8000/modify_data_update', {

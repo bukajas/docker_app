@@ -24,7 +24,6 @@ function Login() {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
         });
-        console.log(response.data.access_token, username);
         updateAuth(response.data.access_token, username);
         setOpen(false);
     } catch (error) {
@@ -49,7 +48,6 @@ function Login() {
     },
   });
 
-  console.log('Is Authenticated:', isAuthenticated);
   const hasAdminScope = scopes.includes('admin');
   const hasNorightScope = scopes.includes('noright');
   const hasReadScope = scopes.includes('read');

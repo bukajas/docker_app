@@ -41,6 +41,7 @@ export default function Home() {
           {/* Add other conditional components as needed */}
         </Container>
         <Drawer variant="permanent" anchor="left">
+          
           <DrawerItems setActiveComponent={setActiveComponent} />
         </Drawer>
       </div>
