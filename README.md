@@ -145,6 +145,7 @@ Nachazi se v adresari `ind_network/scapy`
 Zde je zapotrebi upravit podle pozadavku par hodnot a pro TLS pripojeni a internetove rozhrani na kterem bude zachytavat provoz.
 
 - nastaveni certifikatu a uzivatelskych udaju
+- zde je zapotrebi zmenit cestu podle mista ulozeni, s tim ze cesty `docker_app/testCA/*` by meli zustat ponechane
     ```sh
     telegraf_url = 'https://192.168.122.118:8186/telegraf'  # URL to send data to Telegraf
     auth = HTTPBasicAuth('test', 'test')  # Basic authentication
