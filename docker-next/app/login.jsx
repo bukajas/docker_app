@@ -59,6 +59,7 @@ function Login() {
     <div>
       <ThemeProvider theme={theme}>
         <Button 
+          className="action-button"
           variant="contained" 
           color="primary" 
           onClick={() => setOpen(true)} 

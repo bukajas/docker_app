@@ -3,6 +3,8 @@ import { TextField, Button, FormControl, Box, RadioGroup} from '@mui/material';
 import DynamicDropdownMenu from '../components/Selection_component'
 import dayjs from 'dayjs';
 import DateTimeForm from '../components/Time_component'
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import '../../styles.css';
 
 
 
@@ -72,11 +74,23 @@ const DeleteDataForm = () => {
     setCombinedData(newData);
 };
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#000000', // Example primary color
+    },
+    secondary: {
+      main: '#dc3545', // Example secondary color
+    },
+  },
+});
+
 
   return (
+    <ThemeProvider theme={theme}>
+
     <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
       
-      <FormControl component="fieldset">
         <RadioGroup
           row
           name="timeOption"
@@ -92,16 +106,16 @@ const DeleteDataForm = () => {
             />
           
         </RadioGroup>
-      </FormControl>
       <DynamicDropdownMenu
           onUpdate={handleUpdate}
           startDate={startDate}
           endDate={endDate}
         />
-      <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+      <Button className="delete-button" type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
         Delete Data
       </Button>
     </Box>
+    </ThemeProvider>
   );
 };
 

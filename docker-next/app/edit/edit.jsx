@@ -301,7 +301,6 @@ const DataEditor = () => {
     <div>
       <ThemeProvider theme={theme}>
         <Box sx={{ flexGrow: 1, bgcolor: 'background.paper', p: 2 }}>
-          <Typography variant="h6">Data Editor</Typography>
           <Grid container spacing={2}>
             {/* Range, Measurement Selection, and Tag Filters remain the same */}
             <DateTimeForm
@@ -317,7 +316,7 @@ const DataEditor = () => {
                 startDate={startDate}
                 endDate={endDate}
               />
-              <Button className="custom-button" onClick={fetchData} variant="contained" color="primary" sx={{ mt: 2 }}>
+              <Button className="fetch-button" onClick={fetchData} variant="contained" color="primary" sx={{ mt: 2 }}>
                 Fetch Data
               </Button>
             </Grid>

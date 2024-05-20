@@ -393,7 +393,7 @@ function ChartComponent2({ measurementId, handleDelete }) {
                 </Button>
 
                 <Button
-                  className="export-aggregated-button"
+                  className="export-aggregated-button2"
                   variant="contained"
                   color="secondary"
                   sx={{

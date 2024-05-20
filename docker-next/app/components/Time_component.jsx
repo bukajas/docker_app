@@ -63,27 +63,31 @@ function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, in
         </Grid>
         {mode === 'absolute' ? (
           <>
-            <Grid item xs={12} sm={6}>
-              <DateTimePicker
-                label="Start Date and Time"
-                // value={startDate}
-                onChange={(newStartDate) => updateDates(newStartDate, endDate)}
-                renderInput={(params) => <TextField {...params} />}
-                ampm={false}
-                views={['year', 'month', 'day', 'hours', 'minutes', 'seconds']}
-                maxDateTime={endDate}
-              />
+            <Grid item xs={6}>
+              <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
+                <DateTimePicker
+                  label="Start Date and Time"
+                  value={startDate}
+                  onChange={(newStartDate) => updateDates(newStartDate, endDate)}
+                  renderInput={(params) => <TextField {...params} />}
+                  ampm={false}
+                  views={['year', 'month', 'day', 'hours', 'minutes', 'seconds']}
+                  maxDateTime={endDate}
+                />
+              </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <DateTimePicker
-                label="End Date and Time"
-                // value={endDate}
-                onChange={(newEndDate) => updateDates(startDate, newEndDate)}
-                renderInput={(params) => <TextField {...params} />}
-                ampm={false}
-                views={['year', 'month', 'day', 'hours', 'minutes', 'seconds']}
-                minDateTime={startDate}
-              />
+            <Grid item xs={6}>
+              <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
+                <DateTimePicker
+                  label="End Date and Time"
+                  value={endDate}
+                  onChange={(newEndDate) => updateDates(startDate, newEndDate)}
+                  renderInput={(params) => <TextField {...params} />}
+                  ampm={false}
+                  views={['year', 'month', 'day', 'hours', 'minutes', 'seconds']}
+                  minDateTime={startDate}
+                />
+              </FormControl>
             </Grid>
           </>
         ) : (
@@ -101,6 +105,7 @@ function DateTimeForm({ onStartDateChange, onEndDateChange, initialStartDate, in
               />
             </Grid>
             <Grid item xs={6}>
+              
               <FormControl variant="outlined" fullWidth sx={{ mt: 2 }}>
                 <InputLabel id="range-unit-label">Unit</InputLabel>
                 <Select

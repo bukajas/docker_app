@@ -21,7 +21,7 @@ services:
     env_file:
       - ./env
     volumes:
-      - ./users_db2:/var/lib/mysql6
+      - ./users_db:/var/lib/mysql
 
 
   docker-fastapi:
@@ -45,14 +45,10 @@ services:
     ports:
       - '8888:8086'
     volumes:
-      - ./database2:/var/lib/influxdb1
+      - ./database:/var/lib/influxdb
+      - ./influxdb-init:/docker-entrypoint-initdb.d
     environment:
-      #- DOCKER_INFLUXDB_INIT_MODE=setup
-      #- DOCKER_INFLUXDB_INIT_USERNAME=asszonyij
-      #- DOCKER_INFLUXDB_INIT_PASSWORD=1234567890
-      #- DOCKER_INFLUXDB_INIT_ORG=VUT
-      #- DOCKER_INFLUXDB_INIT_BUCKET=school_data
-      #- NTP_SERVER=docker-ntp
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=secret-admin-token
       - TZ=Etc/GMT-2
     env_file:
       - ./env
@@ -70,9 +66,6 @@ services:
       - ./testCA/myCA/private/telegraf.key:/etc/ssl/telegraf.key:ro
       - ./testCA/myCA/certs/telegraf.cert:/etc/ssl/telegraf.cert:ro
       - ./testCA/myCA/ca.crt:/etc/ssl/myCA.crt:ro
-
-        #environment:
-      #      INFLUX_TOKEN: ZqdB328qWerxyD32I6XcWPChj0xixkxcyUQ2-k4TunHzcn7FmSGwCZ93kaHTw1DGVFAC0mH9RU7F_5aCy11yJQ==
     env_file:
       - ./env
     depends_on:

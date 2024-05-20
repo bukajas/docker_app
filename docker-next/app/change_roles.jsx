@@ -106,7 +106,7 @@ const UsersPage = () => {
         <div>
             <ThemeProvider theme={theme}>
                 <Button
-                    className="manage-users-button"
+                    className="action-button"
                     variant="outlined"
                     onClick={handleClickOpen}
                 >

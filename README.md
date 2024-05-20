@@ -5,7 +5,7 @@ Prumyslovy logovaci server slouzi ke sbirani a ukladani dat/logu z prumyslove si
 
 ## Pozadavky
 
-- System s OS linux
+- System s OS linux (idealne Debian based)
 - Python 3.8+ (a virtualni prostredi "venv")
 - Docker 
 - Docker-compose (vyuziva verzi formatovani 3.8)
@@ -53,7 +53,7 @@ Z duvodu ze se predpoklada ze server bude spusten na lokalni siti, nebylo resena
     ~/docker_app> docker-compose up --build
     !!! Server ponechejte zapnuty !!!    
 
-	#pri prvnim spusteni se vypyse chybova hlaska pro spusteni FastAPI REST API
+	#pri prvnim spusteni se vypise chybova hlaska pro spusteni FastAPI REST API
 	#(sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (2003, "Can't connect to MySQL server on 'docker-mysql' ([Errno 111] Connection refused)"))
 	#duvodem je ze MySQL database je nastavena az po spusteni FastAPI, proto FastAPI se nemuze k databazi pripojit.	
     ```
@@ -75,6 +75,35 @@ Z duvodu ze se predpoklada ze server bude spusten na lokalni siti, nebylo resena
     Enter user full name: test test
     ```
 
+#### Ziskani InfluxDB pristupoveho tokenu
+Bude zapotrebi nastavit novou promenou `INFLUXDB_TOKEN` v souboru `env` promenne 
+
+1. 
+    ```sh
+    #Spusteni serveru - nebo je server zapnuty z predesleho kroku
+    ~/docker_app> docker-compose up
+    ```
+
+2. Navigovat se do weboveho rozhrani InfluxDB database na portu 8888> [http://127.0.0.1:8888](http://127.0.0.1:8888)
+
+3. Prihlaseni se pomoci pristupovych udaju `DOCKER_INFLUXDB_INIT_USERNAME` a `DOCKER_INFLUXDB_INIT_PASSWORD`
+
+    4. Navigovani se do API token na prave strane viz obr.
+
+    ![alt text](images/api_token.png)
+
+    5. Navigovat na "GENERATE API TOKEN" a "Custom API Token"
+
+    ![alt text](images/generateapitoken.png)
+
+    6. Vybrani "Buckets" a u zalozky "All buckets" vybrat "read" a "write"
+
+    ![alt text](images/readwrite.png)
+
+    7. Stisknutim tlacitka generate se vygeneruje a zobrazy novy pristupovy token, kdy je potreba zkopirovat a aktualizovat do 
+    promene v souboru `env` promenne `INFLUXDB_TOKEN`
+
+    ![alt text](images/generated.png)
 
 
 4. Restartovani docker-composer:
@@ -101,10 +130,7 @@ Vsechny soubory pro provoz jsou v adresari `ind_network`
 
 !!! Momentalne jsou certifikaty a adresy nastaveny tak aby to fungovalo s vyuzitim vlastne podepsanych certifikatu. !!!
 
-
-
-
-## Generovani sitoveho provozu
+### Generovani sitoveho provozu
 
 Pro zachytavani prumysloveho provozu byl vyuzit software [Scapy](https://github.com/secdev/scapy)
 
@@ -133,7 +159,7 @@ Zde je zapotrebi upravit podle pozadavku par hodnot a pro TLS pripojeni a intern
     python3 sniff_network.py
     ```
 
-## Generovani prumysloveho provozu pomoci Modbus
+### Generovani prumysloveho provozu pomoci Modbus
 
 Pro simulaci prumysloveho site s vyuzitim prumysloveho protokolu slouzi knihovna [pymodbus](https://github.com/pymodbus-dev/pymodbus)
 
@@ -155,42 +181,7 @@ Pripadne lze nastavit simulovane hodnoty
 
 
 
-
-## Problemy s InfluxDB pristupovym tokenem
-
-Muze se stat ze soucasne aktivovany uzivatelsky token jiz nebude platny a nepujde ho jiz vyuzivat
-
-Bude zapotrebi nastavit novou promenou v souboru `env` promenne `INFLUXDB_TOKEN`
-
-1. 
-    ```sh
-    #Spusteni serveru
-    ~/docker_app> docker-compose up
-    ```
-
-2. Navigovat se do weboveho rozhrani InfluxDB database na portu 8888> [http://127.0.0.1:8888](http://127.0.0.1:8888)
-
-3. Prihlaseni se pomoci pristupovych udaju `DOCKER_INFLUXDB_INIT_USERNAME` a `DOCKER_INFLUXDB_INIT_PASSWORD`
-
-4. Navigovani se do API token na prave strane viz obr.
-
-![alt text](images/api_token.png)
-
-5. Navigovat na "GENERATE API TOKEN" a "Custom API Token"
-
-![alt text](images/generateapitoken.png)
-
-6. Vybrani "Buckets" a u zalozky "All buckets" vybrat "read" a "write"
-
-![alt text](images/readwrite.png)
-
-7. Stisknutim tlacitka generate se vygeneruje a zobrazy novy pristupovy token, kdy je potreba zkopirovat a aktualizovat do 
-promene v souboru `env` promenne `INFLUXDB_TOKEN`
-
-![alt text](images/generated.png)
-
-
-## Mozny problem
+## Mozne problemy
 
 Muze se stat ze nekdy fastapi nebo nektere dalsi sluzby zahlasi chybu pri startu dockeru. napr:
 
@@ -205,41 +196,58 @@ Tuto chybu lze jednoduse odstranit restartovat serveru.
 
 ## Pouziti
 
-
 ### Zobrazeni dat
+![alt text](images/image-3.png)
+![alt text](images/image-4.png)
+- Create chart : vytvoreni nove instance grafu
+- Switch to bar/line chart : prepnuti typu grafu na liniovy nebo sloupcovy graf.
+- Delete this chart : odstraneni dane instance grafu
+- Export chart : exportovoni aktualniho zobrazeni grafu do PNG. 
+- Switch to absolute/relative time : prepnuti mezi vyberem absolutniho a relativniho casu
+- Samotny vyber casu
+- Enable fetching : zapnuti monitorovani v realnem case, pravidelka aktualizace dat kazdou vterinu
+- Select measurement and submit : Vyber mereni a jejich hodnot a nasledne pozadani databaze o tyto data
+- Open right drawer : Dalsi moznost jeste detailnejsiho a specfictejsiho filtrovani
+- Samotny vyber dat ktere budou zobrazena
 
 
 ### Export dat
+![alt text](images/image-2.png)
+- Vyber casoveho intervalu a hodnot jako u zobrazeni dat
+- Export data : exportovani vybranych dat ve vybranem casovem intervalu ve formatu CSV.
+- Aggregated data : exportovani agregovanych dat ve vybranem casovem okamziku.
 
 
 ### Odstraneni dat
+![alt text](images/image-1.png)
+- Vyber casoveho intervalu a hodnot jako u zobrazeni dat
+- Delete data : odstraneni vybranych dat ve vybranem casovem intervalu
 
 
 ### Editovani dat
+![alt text](images/imagee.png)
+- Vyber casoveho intervalu a hodnot jako u zobrazeni dat
+- Fetch data : dotaz pro ziskani dat z databaze
+- Vyber mereni ("coils","vibration","preasure")
+- Tabulka hodnot pro editovani
+- Edit : moznost upravit konktetni hodnotu
+- Delete : moznost odstraneni konkterni hodnoty
+
+!! Pozor : muze se stat ze zmena nebude videt ihned, proto staci aktualizovat stranku a zmeny budou videt.
+
+
+
+## Uzivatele
+- noright : uzivatel bez jakychkoliv opravneni, uzivatel ziska pri registraci
+- read : opravneni pro cteni a exportovani dat
+- read + write : opravneni pro cteni, exportovani, editaci a odstraneni dat.
+- admin : stejne jako read + write s moznost upravy uzivatelu a jejich roli a retencni doby.
 
 
 
 
 
-
-### Logging Data
-
-To log data, send HTTP POST requests to the server's `/log` endpoint with the log data in JSON format. Example:
-
-```json
-
-
-
-
-influxdb tokeny
-- inicializace
-- vygenerovani v web UI
-- nahrani do env
-
-
-
-
-telegraf
+#telegraf
 cd ./CA/
 openssl genpkey -algorithm RSA -out ca.key -pkeyopt rsa_keygen_bits:2048
 openssl req -x509 -new -nodes -key ca.key -sha256 -days 365 -out ca.pem -subj "/C=US/ST=State/L=City/O=Organization/CN=MyCA"
